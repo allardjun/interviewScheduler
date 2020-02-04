@@ -49,6 +49,8 @@ def translateStudentRequests(directoryName):
 
     # sort list by last name
     facultyListSorted = sorted(facultyList, key=lambda x: x.split(" ")[-1])
+    facultyListSorted = facultyList#sorted(facultyList, key=lambda x: x.split(" ")[-1])
+
 
     # Turn student requests into matrix form
     recruitChoices = pd.DataFrame(columns=facultyListSorted, index=studentNames)

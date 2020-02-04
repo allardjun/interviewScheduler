@@ -7,6 +7,9 @@ def makeSchedule(directoryName):
 
     import matplotlib.pyplot as plt
 
+    from fuzzywuzzy import fuzz
+    from fuzzywuzzy import process
+
     #np.random.seed(1)
 
     # parameters
@@ -18,10 +21,10 @@ def makeSchedule(directoryName):
 
     # relative importances of the targets
     alpha_Female = 2**5
-    alpha_AsteriskMinRequests = 2**4
-    alpha_AsteriskFull = 2**3
+    alpha_AsteriskMinRequests = 2**6
+    alpha_AsteriskFull = 0#**3
     alpha_Full = 2**3
-    alpha_minRequests = 2**3
+    alpha_minRequests = 2**2
 
 
     ## ----- Inputs ------
@@ -72,10 +75,11 @@ def makeSchedule(directoryName):
     studentNames = dfStudentRequests.index
 
     facultyNamesFromStudents = list(dfStudentRequests.columns)
-    if not facultyNamesFromStudents == facultyNames:
-        print('The faculty names in the xlsx files do not match.')
-        print(facultyNamesFromStudents)
-        print(facultyNames)
+    for ilist in range(len(facultyNamesFromStudents)):
+        if not (facultyNamesFromStudents[ilist] == facultyNames[ilist]):
+            print('The faculty names in the xlsx files do not match.')
+            print(facultyNamesFromStudents[ilist])
+            print(facultyNames[ilist])
 
     numStudents = len(studentNames)
 
@@ -139,7 +143,7 @@ def makeSchedule(directoryName):
         # pick a random timeslot. If there are both free faculty and free students, put one of each together.
         iTimeslot = np.random.randint(numTimeslots)
         freeFaculty = np.multiply(xPropose[iTimeslot, 0:numCore-1] == -1, boolFacultyAvailability[iTimeslot, 0:numCore-1])
-        if any(freeFaculty) and any(yPropose[iTimeslot, :] == -1):
+        if np.random.rand() < 0.1 and any(freeFaculty) and any(yPropose[iTimeslot, :] == -1):
             facultyWithFree = np.nonzero(freeFaculty)
             studentsWithEmpty = np.nonzero(yPropose[iTimeslot, :] == -1)
             iFaculty = np.random.choice(facultyWithFree[0])
@@ -218,8 +222,34 @@ def makeSchedule(directoryName):
                     yPropose[iTimeslot, iStudent] = pickFaculty
 
         # last two timeslots on Tuesday
+        for iStudent in range(numStudents):
+            if not(yPropose[numTimeslots-1,iStudent]==-1):
+                if not(yPropose[numTimeslots-2,iStudent]==-1):
+                    if np.random.rand()<0.5:
+                        clearMe=numTimeslots-1
+                    else:
+                        clearMe=numTimeslots-2
+                    xPropose[clearMe,int(yPropose[clearMe,iStudent])]=-1
+                    yPropose[clearMe,iStudent]=-1
+        for iFaculty in range(numCore):
+            if not(xPropose[numTimeslots-1,iFaculty]==-1):
+                if not(xPropose[numTimeslots-2,iFaculty]==-1):
+                    if np.random.rand()<0.5:
+                        clearMe=numTimeslots-1
+                    else:
+                        clearMe=numTimeslots-2
+                    yPropose[clearMe,int(xPropose[clearMe,iFaculty])]=-1
+                    xPropose[clearMe,iFaculty]=-1
 
         # Arthur needs 15 more minutes of sleep while partying in Spain while the rest of us work
+        iArthur = facultyNames.index(process.extractOne("Lander",facultyNames, scorer=fuzz.WRatio)[0])
+        iStudentArthur245 = int(xPropose[2,iArthur])
+        #print(iStudentArthur245)
+        if (not (iStudentArthur245==-1)):
+            #print("student " + str(yPropose[3,iStudentArthur245]))
+            if (not (yPropose[3,iStudentArthur245] == -1)):
+                xPropose[3,int(yPropose[3,iStudentArthur245])] = -1
+                yPropose[3,iStudentArthur245] = -1
 
         # --- compute targets ---
 
