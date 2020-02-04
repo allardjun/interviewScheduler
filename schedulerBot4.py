@@ -26,58 +26,62 @@ def makeSchedule(directoryName):
 
     ## ----- Inputs ------
 
-    # -- Read faculty attributes --
-    dfFacultyAttributesUnsorted = pd.read_excel('forBot_FacultyAttributes.xlsx', index_col=0).fillna(0).transpose()
+    # -- Read faculty availability --
+    dfFacultyAvailabilityUnsorted = pd.read_excel(directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx', index_col=0).fillna(0).transpose()
 
     # sort by core vs noncore
-    dfFacultyAttributesUnsorted_Core = dfFacultyAttributesUnsorted[dfFacultyAttributesUnsorted['Core'] == 1]
-    dfFacultyAttributesUnsorted_Noncore = dfFacultyAttributesUnsorted[dfFacultyAttributesUnsorted['Core'] != 1]
-    numCore = len(dfFacultyAttributesUnsorted_Core.index)
-    numNoncore = len(dfFacultyAttributesUnsorted_Noncore.index)
-    dfFacultyAttributes = pd.concat([dfFacultyAttributesUnsorted_Core, dfFacultyAttributesUnsorted_Noncore])
+    dfFacultyAvailabilityUnsorted_Core = dfFacultyAvailabilityUnsorted#dfFacultyAvailabilityUnsorted[dfFacultyAttributesUnsorted['Core'] == 1]
+    #dfFacultyAvailabilityUnsorted_Noncore = dfFacultyAvailabilityUnsorted[dfFacultyAttributesUnsorted['Core'] != 1]
+    dfFacultyAvailability = dfFacultyAvailabilityUnsorted_Core.transpose()#pd.concat([dfFacultyAvailabilityUnsorted_Core, dfFacultyAvailabilityUnsorted_Noncore]).transpose()
 
-    facultyNames = list(dfFacultyAttributes.index)
+    # remove last row, which contains gender
+    dfFacultyAvailability.drop(dfFacultyAvailability.tail(1).index,inplace=True)
 
-    boolFemaleFaculty = list(dfFacultyAttributes["Female"] == 1)
+    boolFacultyAvailability = np.nan_to_num(dfFacultyAvailability.to_numpy())
+    timeslotNames = dfFacultyAvailability.index
+    numTimeslots = len(timeslotNames)
+
+    #print(timeslotNames)
+    #print(numTimeslots)
+
+    facultyNames = list(dfFacultyAvailabilityUnsorted.index)
+
+    numCore = len(facultyNames)
+    numNoncore = 0
+
+    # -- Read faculty attributes --
+    dfFacultyAttributes = dfFacultyAvailabilityUnsorted_Core.transpose().tail(1).transpose()
+
+    #print(dfFacultyAttributes)
+
+    boolFemaleFaculty = list(dfFacultyAttributes["W/ngb/ngd"] == 1)
 
     facultyFemaleList = np.nonzero(boolFemaleFaculty)[0]
     facultyFemaleSet = set(facultyFemaleList)
 
-    # -- Read faculty availability --
-    dfFacultyAvailabilityUnsorted = pd.read_excel('forBot_FacultyAvailabilityMatrix.xlsx', index_col=0).fillna(0).transpose()
-
-    # sort by core vs noncore
-    dfFacultyAvailabilityUnsorted_Core = dfFacultyAvailabilityUnsorted[dfFacultyAttributesUnsorted['Core'] == 1]
-    dfFacultyAvailabilityUnsorted_Noncore = dfFacultyAvailabilityUnsorted[dfFacultyAttributesUnsorted['Core'] != 1]
-    dfFacultyAvailability = pd.concat(
-        [dfFacultyAvailabilityUnsorted_Core, dfFacultyAvailabilityUnsorted_Noncore]).transpose()
-
-    boolFacultyAvailability = np.nan_to_num(dfFacultyAvailability.to_numpy())
-    timeslotNames = dfFacultyAvailability.index
-    if not all(dfFacultyAvailability.columns == facultyNames):
-        print('The faculty names in the xlsx files do not match.')
-
-    numTimeslots = len(timeslotNames)
-
     # -- Read student requests --
 
-    dfStudentRequestsUnsorted = pd.read_excel('forBot_StudentRequestsMatrix.xlsx', index_col=0).fillna(0).transpose()
+    dfStudentRequestsUnsorted = pd.read_excel(directoryName + '/forBot_StudentRequestsMatrix.xlsx', index_col=0).fillna(0).transpose()
 
     # sort by core vs noncore
-    dfStudentRequestsUnsorted_Core = dfStudentRequestsUnsorted[dfFacultyAttributesUnsorted['Core'] == 1]
-    dfStudentRequestsUnsorted_Noncore = dfStudentRequestsUnsorted[dfFacultyAttributesUnsorted['Core'] != 1]
-    dfStudentRequests = pd.concat([dfStudentRequestsUnsorted_Core, dfStudentRequestsUnsorted_Noncore]).transpose()
+    dfStudentRequestsUnsorted_Core = dfStudentRequestsUnsorted#[dfFacultyAttributesUnsorted['Core'] == 1]
+    #dfStudentRequestsUnsorted_Noncore = dfStudentRequestsUnsorted[dfFacultyAttributesUnsorted['Core'] != 1]
+    dfStudentRequests = dfStudentRequestsUnsorted_Core.transpose()#pd.concat([dfStudentRequestsUnsorted_Core, dfStudentRequestsUnsorted_Noncore]).transpose()
 
     boolStudentRequests = np.nan_to_num(dfStudentRequests.to_numpy())
     studentNames = dfStudentRequests.index
-    if not all(dfStudentRequests.columns == facultyNames):
+
+    facultyNamesFromStudents = list(dfStudentRequests.columns)
+    if not facultyNamesFromStudents == facultyNames:
         print('The faculty names in the xlsx files do not match.')
+        print(facultyNamesFromStudents)
+        print(facultyNames)
 
     numStudents = len(studentNames)
 
     # -- Read student attributes --
 
-    dfStudentAttributes = pd.read_excel('forBot_StudentAttributes.xlsx', index_col=0)
+    dfStudentAttributes = pd.read_excel(directoryName + '/forBot_StudentRequestList.xlsx', index_col=0)
 
     if not all(dfStudentRequests.index == studentNames):
         print('The student names in the xlsx files do not match.')
@@ -86,7 +90,7 @@ def makeSchedule(directoryName):
     numAsterisks = boolAsterisk.count(1)
     studentAsteriskList = np.nonzero(boolAsterisk)[0]
 
-    boolFemaleStudent = list(dfStudentAttributes.iloc[:, 1] == 1)
+    boolFemaleStudent = list(dfStudentAttributes['Woman/ngb/ngd'] == 1)
     numFemaleStudents = boolFemaleStudent.count(1)
     studentFemaleList = np.nonzero(boolFemaleStudent)[0]
 
@@ -212,6 +216,11 @@ def makeSchedule(directoryName):
                     xPropose[iTimeslot, clones] = -1
                     xPropose[iTimeslot, pickFaculty] = iStudent
                     yPropose[iTimeslot, iStudent] = pickFaculty
+
+        # last two timeslots on Tuesday
+
+        # Arthur needs 15 more minutes of sleep while partying in Spain while the rest of us work
+
         # --- compute targets ---
 
         # Female + non-gender-binary/declared meet female faculty
@@ -341,7 +350,7 @@ def makeSchedule(directoryName):
             else:
                 xNames[iTimeslot, iFaculty] = studentNames[x[iTimeslot, iFaculty]]
 
-    pd.DataFrame(data=xNames, index=timeslotNames, columns=facultyNames).to_excel('fromBot_FacultySchedules.xlsx')
+    pd.DataFrame(data=xNames, index=timeslotNames, columns=facultyNames).to_excel(directoryName + '/fromBot_FacultySchedules.xlsx')
 
     # output student schedules with names
     yNames = np.empty((numTimeslots, numStudents), dtype='object')
@@ -352,7 +361,7 @@ def makeSchedule(directoryName):
             else:
                 yNames[iTimeslot, iStudent] = facultyNames[int(y[iTimeslot, iStudent])]
 
-    pd.DataFrame(data=yNames, index=timeslotNames, columns=studentNames).to_excel('fromBot_StudentSchedules.xlsx')
+    pd.DataFrame(data=yNames, index=timeslotNames, columns=studentNames).to_excel(directoryName + '/fromBot_StudentSchedules.xlsx')
 
     ## Visualize
 

@@ -6,10 +6,16 @@ def translateStudentRequests(directoryName):
     from fuzzywuzzy import process
 
     # Read in student requests in comma-separated list form
-    file = directoryName + '/forBot_StudentRequestList.xlsx'
-    x1 = pd.read_excel(file)
+    x1 = pd.read_excel(directoryName + '/forBot_StudentRequestList.xlsx')
 
-    facultyList = list()
+
+    # Read in core faculty list
+    xFaculty = pd.read_excel(directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx')
+    print(xFaculty.index)
+
+    facultyList = list(xFaculty.columns)
+    facultyList.pop(0)
+    print(facultyList)
 
     # Uncomment for Excel file with student names split in two columns
     #studentNames = x1['Last name'] + ', ' + x1['First name']
