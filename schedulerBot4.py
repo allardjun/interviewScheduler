@@ -2,6 +2,8 @@ def makeSchedule(directoryName):
 
     import numpy as np
     import pandas as pd
+    import xlsxwriter
+
 
     import sys
 
@@ -367,34 +369,107 @@ def makeSchedule(directoryName):
 
     ## output
 
-    # output faculty schedules with names
-
-    xNames = np.empty((numTimeslots, numCore + numNoncore), dtype='object')
-    for iFaculty in range(numCore + numNoncore):
-        for iTimeslot in range(numTimeslots):
-            if x[iTimeslot, iFaculty] == -1:
-                if boolFacultyAvailability[iTimeslot, iFaculty] == 0:
-                    xNames[iTimeslot, iFaculty] = "..."
+    if 1:
+        # --------------- All in one file, one sheet -----------------------
+        # output faculty schedules with names
+        xNames = np.empty((numTimeslots, numCore + numNoncore), dtype='object')
+        for iFaculty in range(numCore + numNoncore):
+            for iTimeslot in range(numTimeslots):
+                if x[iTimeslot, iFaculty] == -1:
+                    if boolFacultyAvailability[iTimeslot, iFaculty] == 0:
+                        xNames[iTimeslot, iFaculty] = "..."
+                    else:
+                        xNames[iTimeslot, iFaculty] = "open"
                 else:
-                    xNames[iTimeslot, iFaculty] = "open"
-            else:
-                xNames[iTimeslot, iFaculty] = studentNames[x[iTimeslot, iFaculty]]
+                    xNames[iTimeslot, iFaculty] = studentNames[x[iTimeslot, iFaculty]]
+        pd.DataFrame(data=xNames, index=timeslotNames, columns=facultyNames).to_excel(
+            directoryName + '/fromBot_FacultySchedules.xlsx')
 
-    pd.DataFrame(data=xNames, index=timeslotNames, columns=facultyNames).to_excel(directoryName + '/fromBot_FacultySchedules.xlsx')
+        # output student schedules with names
+        yNames = np.empty((numTimeslots, numStudents), dtype='object')
+        for iStudent in range(numStudents):
+            for iTimeslot in range(numTimeslots):
+                if y[iTimeslot, iStudent] == -1:
+                    yNames[iTimeslot, iStudent] = "..."
+                else:
+                    yNames[iTimeslot, iStudent] = facultyNames[int(y[iTimeslot, iStudent])]
+        pd.DataFrame(data=yNames, index=timeslotNames, columns=studentNames).to_excel(
+            directoryName + '/fromBot_StudentSchedules.xlsx')
 
-    # output student schedules with names
-    yNames = np.empty((numTimeslots, numStudents), dtype='object')
-    for iStudent in range(numStudents):
-        for iTimeslot in range(numTimeslots):
-            if y[iTimeslot, iStudent] == -1:
-                yNames[iTimeslot, iStudent] = "..."
-            else:
-                yNames[iTimeslot, iStudent] = facultyNames[int(y[iTimeslot, iStudent])]
+    if 1:
+        # --------------- Each a separate file -----------------------
+        # output faculty schedules with names
+        for iFaculty in range(numCore + numNoncore):
+            xNames = np.empty((numTimeslots, 1), dtype='object')
+            nonEmpty = 0
+            for iTimeslot in range(numTimeslots):
+                if x[iTimeslot, iFaculty] == -1:
+                    if boolFacultyAvailability[iTimeslot, iFaculty] == 0:
+                        xNames[iTimeslot] = "..."
+                    else:
+                        xNames[iTimeslot] = "open"
+                else:
+                    xNames[iTimeslot] = studentNames[x[iTimeslot, iFaculty]]
+                    nonEmpty = 1
+            if nonEmpty == 1:
+                pd.DataFrame(data=xNames, index=timeslotNames, columns=[facultyNames[iFaculty]]
+                    ).to_excel(directoryName + '/faculty_'
+                    + facultyNames[iFaculty].replace(" ", "") + '.xlsx')
 
-    pd.DataFrame(data=yNames, index=timeslotNames, columns=studentNames).to_excel(directoryName + '/fromBot_StudentSchedules.xlsx')
+        # output student schedules with names
+        for iStudent in range(numStudents):
+            yNames = np.empty((numTimeslots, 1), dtype='object')
+            for iTimeslot in range(numTimeslots):
+                if y[iTimeslot, iStudent] == -1:
+                    yNames[iTimeslot] = "..."
+                else:
+                    yNames[iTimeslot] = facultyNames[int(y[iTimeslot, iStudent])]
+            pd.DataFrame(data=yNames, index=timeslotNames, columns=[studentNames[iStudent]]
+                ).to_excel(directoryName + '/student_'
+                + studentNames[iStudent].replace(" ", "").replace("(", "").replace(")", "") + '.xlsx')
+
+    if 1:
+        # --------------- Different sheets -----------------------
+        writer = pd.ExcelWriter(directoryName + '/fromBot_FacultySchedules_1SheetEach.xlsx', engine='xlsxwriter')
+        # output faculty schedules with names
+        for iFaculty in range(numCore + numNoncore):
+            xNames = np.empty((numTimeslots, 1), dtype='object')
+            nonEmpty = 0
+            for iTimeslot in range(numTimeslots):
+                if x[iTimeslot, iFaculty] == -1:
+                    if boolFacultyAvailability[iTimeslot, iFaculty] == 0:
+                        xNames[iTimeslot] = "..."
+                    else:
+                        xNames[iTimeslot] = "open"
+                else:
+                    xNames[iTimeslot] = studentNames[x[iTimeslot, iFaculty]]
+                    nonEmpty = 1
+            if nonEmpty == 1:
+                sheetName=facultyNames[iFaculty].replace(" ", "")
+                pd.DataFrame(data=xNames, index=timeslotNames, columns=[facultyNames[iFaculty]]
+                    ).to_excel(writer,sheet_name=sheetName)
+                writer.sheets[sheetName].set_column('A:A', 35)
+                writer.sheets[sheetName].set_column('B:B', 30)
+        writer.save()
+
+        writer = pd.ExcelWriter(directoryName + '/fromBot_StudentSchedules_1SheetEach.xlsx', engine='xlsxwriter')
+        # output student schedules with names
+        for iStudent in range(numStudents):
+            yNames = np.empty((numTimeslots, 1), dtype='object')
+            for iTimeslot in range(numTimeslots):
+                if y[iTimeslot, iStudent] == -1:
+                    yNames[iTimeslot] = "..."
+                else:
+                    yNames[iTimeslot] = facultyNames[int(y[iTimeslot, iStudent])]
+            sheetName = studentNames[iStudent].replace(" ", "").replace("(", "").replace(")", "")
+            pd.DataFrame(data=yNames, index=timeslotNames, columns=[studentNames[iStudent]]
+                ).to_excel(writer,sheet_name=sheetName)
+            writer.sheets[sheetName].set_column('A:A', 35)
+            writer.sheets[sheetName].set_column('B:B', 30)
+        writer.save()
+
 
     ## Visualize
-
     if visualize:
         fig = plt.figure(figsize=(18, 16))
 
