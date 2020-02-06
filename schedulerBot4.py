@@ -329,7 +329,7 @@ def makeSchedule(directoryName):
         # Make sure no faculty gets more than 9 students
         facultyMeetingTooManyStudents = 0
         for iFaculty in range(numCore+numNoncore):
-            numMeetings = sum(xPropose[:,iFaculty])
+            numMeetings = numTimeslots - sum(xPropose[:,iFaculty]==-1)
             if numMeetings > 9:
                 facultyMeetingTooManyStudents += 1
 
@@ -340,8 +340,8 @@ def makeSchedule(directoryName):
                       + alpha_AsteriskMinRequests * ( minFractionOfAsteriskRequestSatisfied + totalFractionOfAsteriskRequestSatisfied / float(numAsterisks))
                       + alpha_AsteriskFull        * ( 100*minFractionAsteriskFull + totalFractionAsteriskFull / float(numAsterisks))
                       + alpha_Full                * ( 100*minFractionFull + totalFractionFull / float(numStudents) - numFiveOrLess)
-                      + alpha_minRequests         * ( minFractionOfRequestSatisfied + totalFractionOfRequestSatisfied / float(numStudents)) )
-                      - facultyMeetingTooManyStudents
+                      + alpha_minRequests         * ( minFractionOfRequestSatisfied + totalFractionOfRequestSatisfied / float(numStudents))
+                      - facultyMeetingTooManyStudents )
 
         # Boltzmann test
         # Do it as two if statements to avoid runtime overflow.
@@ -406,7 +406,8 @@ def makeSchedule(directoryName):
         print('Percent schedule full, for all students: On average: %3.0f%%, at worst: %3.0f%%' %
               (100 * totalFractionFull_min / float(numStudents),
                100 * minFractionFull_min))
-        print("Number of faculty meeting more than 9 students: " + facultyMeetingTooManyStudents)
+
+        print("Number of faculty meeting more than 9 students: " + str(facultyMeetingTooManyStudents))
 
 
     ## output
