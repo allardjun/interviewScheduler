@@ -26,21 +26,21 @@ def translateStudentRequests(directoryName):
     for iStudent in range(len(x1)):
 
         #thisStudentChoices = x1.iloc[iStudent]['Faculty names'].replace('\xa0', '').replace(', and ', ', ').replace(' and ', ', ').split(',')
-        thisStudentChoices = x1.iloc[iStudent]['Faculty names'].split(',')
+        #print(x1.iloc[iStudent]['Faculty names'])
+        if len(x1.iloc[iStudent]['Faculty names'])>0:
+            thisStudentChoices = x1.iloc[iStudent]['Faculty names'].split(',')
+        else:
+            thisStudentChoices = ["Allard"]
 
         thisStudentChoices_Clean = list()
         for iFacultyName in range(len(thisStudentChoices)):
-            if len(facultyList)>=1:
-                facultyName = thisStudentChoices[iFacultyName].lstrip()
-                fuzzyCompare = process.extractOne(facultyName,facultyList, scorer=fuzz.WRatio)
+            facultyName = thisStudentChoices[iFacultyName].lstrip()
+            fuzzyCompare = process.extractOne(facultyName,facultyList, scorer=fuzz.WRatio)
 
-                if fuzzyCompare[1]<70:
-                    facultyList.append(facultyName)
-                else:
-                    facultyName = fuzzyCompare[0]
+            if fuzzyCompare[1]<70:
+                print("This faculty is requested but has not declared availability: " + facultyName)                    #facultyList.append(facultyName)
             else:
-                facultyName = thisStudentChoices[iFacultyName].lstrip()
-                facultyList.append(facultyName)
+                    facultyName = fuzzyCompare[0]
 
             thisStudentChoices_Clean.append(facultyName)
 
@@ -64,4 +64,4 @@ def translateStudentRequests(directoryName):
 if __name__ == '__main__':
     # test1.py executed as script
     # do something
-    translateStudentRequests('Example3_2020Entry')
+    translateStudentRequests('Real2020Entry1')

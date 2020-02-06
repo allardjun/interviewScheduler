@@ -20,7 +20,7 @@ def makeSchedule(directoryName):
 
     visualize = 0  # whether or not to create graphic showing simulated annealing
 
-    ntmax = int(4e4)  # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
+    ntmax = int(2e4)  # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
 
     # relative importances of the targets
     alpha_Female = 2**5
