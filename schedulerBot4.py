@@ -20,14 +20,14 @@ def makeSchedule(directoryName):
 
     visualize = 0  # whether or not to create graphic showing simulated annealing
 
-    ntmax = int(2e4)  # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
+    ntmax = int(5e4)  # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
 
     # relative importances of the targets
     alpha_Female = 2**5
     alpha_AsteriskMinRequests = 2**7
     alpha_AsteriskFull = 0#**3
-    alpha_Full = 2**3
-    alpha_minRequests = 2**2
+    alpha_Full = 2**2
+    alpha_minRequests = 2**4
 
 
     ## ----- Inputs ------
@@ -72,6 +72,8 @@ def makeSchedule(directoryName):
     if excelRow2Location==1:
         dfFacultyLocations = dfFacultyAvailabilityUnsorted_Core.transpose().head(1).transpose()
 
+    iArthur = facultyNames.index(process.extractOne("Lander",facultyNames, scorer=fuzz.WRatio)[0])
+
     # -- Read student requests --
 
     dfStudentRequestsUnsorted = pd.read_excel(directoryName + '/forBot_StudentRequestsMatrix.xlsx', index_col=0).fillna(0).transpose()
@@ -83,6 +85,7 @@ def makeSchedule(directoryName):
 
     boolStudentRequests = np.nan_to_num(dfStudentRequests.to_numpy())
     studentNames = dfStudentRequests.index
+    studentNamesList = list(studentNames)
 
     facultyNamesFromStudents = list(dfStudentRequests.columns)
     for ilist in range(len(facultyNamesFromStudents)):
@@ -109,6 +112,10 @@ def makeSchedule(directoryName):
     studentFemaleList = np.nonzero(boolFemaleStudent)[0]
     #print("Number of W students: " + str(numFemaleStudents))
 
+
+    jStudent = studentNamesList.index(process.extractOne("Nguyen",studentNamesList, scorer=fuzz.WRatio)[0])
+
+
     ## --- setup ----
 
     x = -1 * np.ones((numTimeslots, numCore + numNoncore))  # faculty schedule
@@ -126,7 +133,7 @@ def makeSchedule(directoryName):
     # Temperature function. Annealing function.
     def kBT(ntAnneal):
         return sum([alpha_Female, alpha_AsteriskMinRequests, alpha_AsteriskFull, alpha_Full, alpha_minRequests]) * \
-            np.power(1 - ntAnneal / float(ntmax+2), 4)
+            np.power(1 - ntAnneal / float(ntmax+2), 6)
 
 
     if (visualize):
@@ -154,7 +161,7 @@ def makeSchedule(directoryName):
         # pick a random timeslot. If there are both free faculty and free students, put one of each together.
         iTimeslot = np.random.randint(numTimeslots)
         freeFaculty = np.multiply(xPropose[iTimeslot, 0:numCore-1] == -1, boolFacultyAvailability[iTimeslot, 0:numCore-1])
-        if np.random.rand() < 0.01 and any(freeFaculty) and any(yPropose[iTimeslot, :] == -1):
+        if 0:#np.random.rand() < 0.00 and any(freeFaculty) and any(yPropose[iTimeslot, :] == -1):
             facultyWithFree = np.nonzero(freeFaculty)
             studentsWithEmpty = np.nonzero(yPropose[iTimeslot, :] == -1)
             iFaculty = np.random.choice(facultyWithFree[0])
@@ -189,7 +196,10 @@ def makeSchedule(directoryName):
                     #print(iStudent not in xPropose[:, iFaculty])
                     if iStudent not in xPropose[:, iFaculty]:
                         newStudent = 1
-            xPropose[iTimeslot, iFaculty] = iStudent
+
+            # STUDENTS WITH PARTIAL SCHEDULES
+            if not (iTimeslot>5 and iStudent == jStudent):
+                xPropose[iTimeslot, iFaculty] = iStudent
 
         else:  # attempt single element change of non-core faculty schedule
             # pick a random slot in x and put a student(who requested this faculty) in it
@@ -213,7 +223,6 @@ def makeSchedule(directoryName):
             if numAttemptsNonCore < numNoncore * numStudents:
                 xPropose[iTimeslot, iFaculty] = iStudent
 
-
         # --- hard constraints ---
 
         # eliminate student double bookings ("clones") and generate student schedules
@@ -236,7 +245,7 @@ def makeSchedule(directoryName):
         for iStudent in range(numStudents):
             if not(yPropose[numTimeslots-1,iStudent]==-1):
                 if not(yPropose[numTimeslots-2,iStudent]==-1):
-                    if np.random.rand()<0.05:
+                    if np.random.rand()<0.5:
                         clearMe=numTimeslots-1
                     else:
                         clearMe=numTimeslots-2
@@ -245,7 +254,7 @@ def makeSchedule(directoryName):
         for iFaculty in range(numCore):
             if not(xPropose[numTimeslots-1,iFaculty]==-1):
                 if not(xPropose[numTimeslots-2,iFaculty]==-1):
-                    if np.random.rand()<0.05:
+                    if np.random.rand()<0.5:
                         clearMe=numTimeslots-1
                     else:
                         clearMe=numTimeslots-2
@@ -272,7 +281,6 @@ def makeSchedule(directoryName):
                     xPropose[clearMe,iFaculty]=-1
 
         # Arthur needs 15 more minutes of sleep while partying in Spain while the rest of us work
-        iArthur = facultyNames.index(process.extractOne("Lander",facultyNames, scorer=fuzz.WRatio)[0])
         iStudentArthur245 = int(xPropose[2,iArthur])
         #print(iStudentArthur245)
         if (not (iStudentArthur245==-1)):
@@ -308,11 +316,12 @@ def makeSchedule(directoryName):
         minFractionAsteriskFull = min(fractionAsteriskFull)
 
         # All students get full schedules
-        fractionFull = sum(yPropose != -1) / float(numTimeslots)
+        yProposeFulltime = yPropose#np.delete(yPropose,jStudent,1)
+        fractionFull = sum(yProposeFulltime != -1) / float(numTimeslots)
         totalFractionFull = sum(fractionFull)
         minFractionFull = min(fractionFull)
 
-        numFiveOrLess = sum(fractionFull <= float(5.0/numTimeslots))
+        numFiveOrLess = sum(fractionFull <= 5.0/float(numTimeslots))
         #print(numFiveOrLess)
 
         # All students get requested faculty
@@ -340,11 +349,12 @@ def makeSchedule(directoryName):
 
         # Compute objective function
         EPropose = - (alpha_Female * fractionFemaleMeeting
-                      + alpha_AsteriskMinRequests * ( 100*minFractionOfAsteriskRequestSatisfied + totalFractionOfAsteriskRequestSatisfied / float(numAsterisks))
-                      + alpha_AsteriskFull        * ( 100*minFractionAsteriskFull + totalFractionAsteriskFull / float(numAsterisks))
-                      + alpha_Full                * ( 100*minFractionFull + totalFractionFull / float(numStudents) - numFiveOrLess)
-                      + alpha_minRequests         * ( minFractionOfRequestSatisfied + totalFractionOfRequestSatisfied / float(numStudents))
-                      - facultyMeetingTooManyStudents )
+                      + alpha_AsteriskMinRequests * (  1*minFractionOfAsteriskRequestSatisfied + totalFractionOfAsteriskRequestSatisfied / float(numAsterisks))
+                      + alpha_AsteriskFull        * ( 10*minFractionAsteriskFull + totalFractionAsteriskFull / float(numAsterisks))
+                      + alpha_Full                * ( 10*minFractionFull + totalFractionFull / float(numStudents))
+                      + alpha_minRequests         * ( 10*minFractionOfRequestSatisfied + totalFractionOfRequestSatisfied / float(numStudents))
+                      - facultyMeetingTooManyStudents
+                      - numFiveOrLess)
 
         # Boltzmann test
         # Do it as two if statements to avoid runtime overflow.
@@ -411,6 +421,8 @@ def makeSchedule(directoryName):
                100 * minFractionFull_min))
 
         print("Number of faculty meeting more than 9 students: " + str(facultyMeetingTooManyStudents))
+
+        print("Number of students meeting fewer than 6 faculty: " + str(numFiveOrLess))
 
 
     ## output
