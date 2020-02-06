@@ -16,10 +16,11 @@ def makeSchedule(directoryName):
 
     # parameters
 
+    excelRow2Location = 1
+
     visualize = 0  # whether or not to create graphic showing simulated annealing
 
-    ntmax = int(2e4)  # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
-    bigJumpProb = 0.05  # probability of taking a big jump in state space
+    ntmax = int(4e4)  # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
 
     # relative importances of the targets
     alpha_Female = 2**5
@@ -38,6 +39,10 @@ def makeSchedule(directoryName):
     dfFacultyAvailabilityUnsorted_Core = dfFacultyAvailabilityUnsorted#dfFacultyAvailabilityUnsorted[dfFacultyAttributesUnsorted['Core'] == 1]
     #dfFacultyAvailabilityUnsorted_Noncore = dfFacultyAvailabilityUnsorted[dfFacultyAttributesUnsorted['Core'] != 1]
     dfFacultyAvailability = dfFacultyAvailabilityUnsorted_Core.transpose()#pd.concat([dfFacultyAvailabilityUnsorted_Core, dfFacultyAvailabilityUnsorted_Noncore]).transpose()
+
+    # remove first row, which contains gender
+    if excelRow2Location==1:
+        dfFacultyAvailability.drop(dfFacultyAvailability.head(1).index,inplace=True)
 
     # remove last row, which contains gender
     dfFacultyAvailability.drop(dfFacultyAvailability.tail(1).index,inplace=True)
@@ -63,6 +68,9 @@ def makeSchedule(directoryName):
 
     facultyFemaleList = np.nonzero(boolFemaleFaculty)[0]
     facultyFemaleSet = set(facultyFemaleList)
+
+    if excelRow2Location==1:
+        dfFacultyLocations = dfFacultyAvailabilityUnsorted_Core.transpose().head(1).transpose()
 
     # -- Read student requests --
 
@@ -117,7 +125,8 @@ def makeSchedule(directoryName):
 
     # Temperature function. Annealing function.
     def kBT(ntAnneal):
-        return sum([alpha_Female, alpha_AsteriskMinRequests, alpha_AsteriskFull, alpha_Full, alpha_minRequests]) * np.power(1 - ntAnneal / float(ntmax+1), 3)
+        return sum([alpha_Female, alpha_AsteriskMinRequests, alpha_AsteriskFull, alpha_Full, alpha_minRequests]) * \
+            np.power(1 - ntAnneal / float(ntmax+2), 4)
 
 
     if (visualize):
@@ -145,7 +154,7 @@ def makeSchedule(directoryName):
         # pick a random timeslot. If there are both free faculty and free students, put one of each together.
         iTimeslot = np.random.randint(numTimeslots)
         freeFaculty = np.multiply(xPropose[iTimeslot, 0:numCore-1] == -1, boolFacultyAvailability[iTimeslot, 0:numCore-1])
-        if np.random.rand() < 0.1 and any(freeFaculty) and any(yPropose[iTimeslot, :] == -1):
+        if np.random.rand() < 0.01 and any(freeFaculty) and any(yPropose[iTimeslot, :] == -1):
             facultyWithFree = np.nonzero(freeFaculty)
             studentsWithEmpty = np.nonzero(yPropose[iTimeslot, :] == -1)
             iFaculty = np.random.choice(facultyWithFree[0])
@@ -223,11 +232,11 @@ def makeSchedule(directoryName):
                     xPropose[iTimeslot, pickFaculty] = iStudent
                     yPropose[iTimeslot, iStudent] = pickFaculty
 
-        # last two timeslots on Tuesday
+        # prevent conflict overlap in last 3 timeslots on Tuesday
         for iStudent in range(numStudents):
             if not(yPropose[numTimeslots-1,iStudent]==-1):
                 if not(yPropose[numTimeslots-2,iStudent]==-1):
-                    if np.random.rand()<0.5:
+                    if np.random.rand()<0.05:
                         clearMe=numTimeslots-1
                     else:
                         clearMe=numTimeslots-2
@@ -236,10 +245,29 @@ def makeSchedule(directoryName):
         for iFaculty in range(numCore):
             if not(xPropose[numTimeslots-1,iFaculty]==-1):
                 if not(xPropose[numTimeslots-2,iFaculty]==-1):
-                    if np.random.rand()<0.5:
+                    if np.random.rand()<0.05:
                         clearMe=numTimeslots-1
                     else:
                         clearMe=numTimeslots-2
+                    yPropose[clearMe,int(xPropose[clearMe,iFaculty])]=-1
+                    xPropose[clearMe,iFaculty]=-1
+
+        for iStudent in range(numStudents):
+            if not(yPropose[numTimeslots-2,iStudent]==-1):
+                if not(yPropose[numTimeslots-3,iStudent]==-1):
+                    if np.random.rand()<0.5:
+                        clearMe=numTimeslots-2
+                    else:
+                        clearMe=numTimeslots-3
+                    xPropose[clearMe,int(yPropose[clearMe,iStudent])]=-1
+                    yPropose[clearMe,iStudent]=-1
+        for iFaculty in range(numCore):
+            if not(xPropose[numTimeslots-2,iFaculty]==-1):
+                if not(xPropose[numTimeslots-3,iFaculty]==-1):
+                    if np.random.rand()<0.5:
+                        clearMe=numTimeslots-2
+                    else:
+                        clearMe=numTimeslots-3
                     yPropose[clearMe,int(xPropose[clearMe,iFaculty])]=-1
                     xPropose[clearMe,iFaculty]=-1
 
@@ -284,6 +312,9 @@ def makeSchedule(directoryName):
         totalFractionFull = sum(fractionFull)
         minFractionFull = min(fractionFull)
 
+        numFiveOrLess = sum(fractionFull <= float(5.0/numTimeslots))
+        #print(numFiveOrLess)
+
         # All students get requested faculty
         minFractionOfRequestSatisfied = 1
         totalFractionOfRequestSatisfied = 0
@@ -299,12 +330,13 @@ def makeSchedule(directoryName):
         # Compute objective function
         EPropose = - (alpha_Female * fractionFemaleMeeting
                       + alpha_AsteriskMinRequests * ( minFractionOfAsteriskRequestSatisfied + totalFractionOfAsteriskRequestSatisfied / float(numAsterisks))
-                      + alpha_AsteriskFull        * ( minFractionAsteriskFull + totalFractionAsteriskFull / float(numAsterisks))
-                      + alpha_Full                * ( minFractionFull + totalFractionFull / float(numStudents))
-                      + alpha_minRequests         * ( 1000*minFractionOfRequestSatisfied + totalFractionOfRequestSatisfied / float(numStudents)) )
+                      + alpha_AsteriskFull        * ( 100*minFractionAsteriskFull + totalFractionAsteriskFull / float(numAsterisks))
+                      + alpha_Full                * ( 100*minFractionFull + totalFractionFull / float(numStudents) - numFiveOrLess)
+                      + alpha_minRequests         * ( minFractionOfRequestSatisfied + totalFractionOfRequestSatisfied / float(numStudents)) )
 
         # Boltzmann test
-        if np.random.rand() < np.exp(-(EPropose - E) / kBT(nt)):
+        # Do it as two if statements to avoid runtime overflow.
+        if EPropose < E or (np.random.rand() < np.exp(-(EPropose - E) / kBT(nt))):
             E = EPropose
             x[:] = xPropose
             y[:] = yPropose
@@ -396,7 +428,7 @@ def makeSchedule(directoryName):
         pd.DataFrame(data=yNames, index=timeslotNames, columns=studentNames).to_excel(
             directoryName + '/fromBot_StudentSchedules.xlsx')
 
-    if 1:
+    if 0:
         # --------------- Each a separate file -----------------------
         # output faculty schedules with names
         for iFaculty in range(numCore + numNoncore):
@@ -455,17 +487,18 @@ def makeSchedule(directoryName):
         writer = pd.ExcelWriter(directoryName + '/fromBot_StudentSchedules_1SheetEach.xlsx', engine='xlsxwriter')
         # output student schedules with names
         for iStudent in range(numStudents):
-            yNames = np.empty((numTimeslots, 1), dtype='object')
+            yNames = np.empty((numTimeslots, 2), dtype='object')
             for iTimeslot in range(numTimeslots):
                 if y[iTimeslot, iStudent] == -1:
-                    yNames[iTimeslot] = "..."
+                    yNames[iTimeslot,0] = "..."
                 else:
-                    yNames[iTimeslot] = facultyNames[int(y[iTimeslot, iStudent])]
+                    yNames[iTimeslot,0] = facultyNames[int(y[iTimeslot, iStudent])]
+                    yNames[iTimeslot,1] = dfFacultyLocations.iloc[int(y[iTimeslot, iStudent]),0]
             sheetName = studentNames[iStudent].replace(" ", "").replace("(", "").replace(")", "")
-            pd.DataFrame(data=yNames, index=timeslotNames, columns=[studentNames[iStudent]]
+            pd.DataFrame(data=yNames, index=timeslotNames, columns=[studentNames[iStudent], "Location"]
                 ).to_excel(writer,sheet_name=sheetName)
             writer.sheets[sheetName].set_column('A:A', 35)
-            writer.sheets[sheetName].set_column('B:B', 30)
+            writer.sheets[sheetName].set_column('B:C', 30)
         writer.save()
 
 
@@ -511,4 +544,4 @@ def makeSchedule(directoryName):
 if __name__ == '__main__':
     # test1.py executed as script
     # do something
-    makeSchedule('Example3_2020Entry')
+    makeSchedule('Example4_2020EntryLocations')
