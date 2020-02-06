@@ -12,7 +12,7 @@ def makeSchedule(directoryName):
     from fuzzywuzzy import fuzz
     from fuzzywuzzy import process
 
-    #np.random.seed(1)
+    np.random.seed(1)
 
     # parameters
 
@@ -24,7 +24,7 @@ def makeSchedule(directoryName):
 
     # relative importances of the targets
     alpha_Female = 2**5
-    alpha_AsteriskMinRequests = 2**6
+    alpha_AsteriskMinRequests = 2**7
     alpha_AsteriskFull = 0#**3
     alpha_Full = 2**3
     alpha_minRequests = 2**2
@@ -62,7 +62,7 @@ def makeSchedule(directoryName):
     # -- Read faculty attributes --
     dfFacultyAttributes = dfFacultyAvailabilityUnsorted_Core.transpose().tail(1).transpose()
 
-    print(dfFacultyAttributes)
+    #print(dfFacultyAttributes)
 
     boolFemaleFaculty = list(dfFacultyAttributes["W"] == 1)
 
@@ -107,7 +107,7 @@ def makeSchedule(directoryName):
     boolFemaleStudent = list(dfStudentAttributes['W'] == 1)
     numFemaleStudents = boolFemaleStudent.count(1)
     studentFemaleList = np.nonzero(boolFemaleStudent)[0]
-    print("Number of W students: " + str(numFemaleStudents))
+    #print("Number of W students: " + str(numFemaleStudents))
 
     ## --- setup ----
 
@@ -319,7 +319,10 @@ def makeSchedule(directoryName):
         minFractionOfRequestSatisfied = 1
         totalFractionOfRequestSatisfied = 0
         for iStudent in range(numStudents):
-            fractionOfRequestSatisfied = len(set(np.where(boolStudentRequests[iStudent, :] == 1)[0]) & set(yPropose[:, iStudent]) ) / float(np.count_nonzero(boolStudentRequests[iStudent, :] == 1))
+            if np.count_nonzero(boolStudentRequests[iStudent, :] == 1) > 0:
+                fractionOfRequestSatisfied = len(set(np.where(boolStudentRequests[iStudent, :] == 1)[0]) & set(yPropose[:, iStudent]) ) / float(np.count_nonzero(boolStudentRequests[iStudent, :] == 1))
+            else:
+                fractionOfRequestSatisfied = 1
             totalFractionOfRequestSatisfied = totalFractionOfRequestSatisfied + fractionOfRequestSatisfied
             if minFractionOfRequestSatisfied > fractionOfRequestSatisfied:
                 minFractionOfRequestSatisfied = fractionOfRequestSatisfied
@@ -337,7 +340,7 @@ def makeSchedule(directoryName):
 
         # Compute objective function
         EPropose = - (alpha_Female * fractionFemaleMeeting
-                      + alpha_AsteriskMinRequests * ( minFractionOfAsteriskRequestSatisfied + totalFractionOfAsteriskRequestSatisfied / float(numAsterisks))
+                      + alpha_AsteriskMinRequests * ( 100*minFractionOfAsteriskRequestSatisfied + totalFractionOfAsteriskRequestSatisfied / float(numAsterisks))
                       + alpha_AsteriskFull        * ( 100*minFractionAsteriskFull + totalFractionAsteriskFull / float(numAsterisks))
                       + alpha_Full                * ( 100*minFractionFull + totalFractionFull / float(numStudents) - numFiveOrLess)
                       + alpha_minRequests         * ( minFractionOfRequestSatisfied + totalFractionOfRequestSatisfied / float(numStudents))

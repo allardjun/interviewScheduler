@@ -29,7 +29,7 @@ def translateStudentRequests(directoryName):
 
         #thisStudentChoices = x1.iloc[iStudent]['Faculty names'].replace('\xa0', '').replace(', and ', ', ').replace(' and ', ', ').split(',')
         #print(x1.iloc[iStudent]['Faculty names'])
-        if x1.iloc[iStudent]['Faculty names']:
+        if not isinstance(x1.iloc[iStudent]['Faculty names'],float):
             thisStudentChoices = x1.iloc[iStudent]['Faculty names'].split(',')
         else:
             thisStudentChoices = ["Nobody"]
