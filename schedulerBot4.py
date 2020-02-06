@@ -325,6 +325,14 @@ def makeSchedule(directoryName):
                 minFractionOfRequestSatisfied = fractionOfRequestSatisfied
         # finished loop through all students
 
+
+        # Make sure no faculty gets more than 9 students
+        facultyMeetingTooManyStudents = 0
+        for iFaculty in range(numCore+numNoncore):
+            numMeetings = sum(xPropose[:,iFaculty])
+            if numMeetings > 9:
+                facultyMeetingTooManyStudents += 1
+
         # TO DO?:Minimize walking between med campus and core campus
 
         # Compute objective function
@@ -333,6 +341,7 @@ def makeSchedule(directoryName):
                       + alpha_AsteriskFull        * ( 100*minFractionAsteriskFull + totalFractionAsteriskFull / float(numAsterisks))
                       + alpha_Full                * ( 100*minFractionFull + totalFractionFull / float(numStudents) - numFiveOrLess)
                       + alpha_minRequests         * ( minFractionOfRequestSatisfied + totalFractionOfRequestSatisfied / float(numStudents)) )
+                      - facultyMeetingTooManyStudents
 
         # Boltzmann test
         # Do it as two if statements to avoid runtime overflow.
@@ -397,6 +406,7 @@ def makeSchedule(directoryName):
         print('Percent schedule full, for all students: On average: %3.0f%%, at worst: %3.0f%%' %
               (100 * totalFractionFull_min / float(numStudents),
                100 * minFractionFull_min))
+        print("Number of faculty meeting more than 9 students: " + facultyMeetingTooManyStudents)
 
 
     ## output
