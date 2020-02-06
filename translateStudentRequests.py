@@ -17,6 +17,8 @@ def translateStudentRequests(directoryName):
     facultyList.pop(0)
     print(facultyList)
 
+    missingFacultyList = ['Nobody']
+
     # Uncomment for Excel file with student names split in two columns
     #studentNames = x1['Last name'] + ', ' + x1['First name']
     studentNames = x1['Student name']
@@ -27,10 +29,10 @@ def translateStudentRequests(directoryName):
 
         #thisStudentChoices = x1.iloc[iStudent]['Faculty names'].replace('\xa0', '').replace(', and ', ', ').replace(' and ', ', ').split(',')
         #print(x1.iloc[iStudent]['Faculty names'])
-        if len(x1.iloc[iStudent]['Faculty names'])>0:
+        if x1.iloc[iStudent]['Faculty names']:
             thisStudentChoices = x1.iloc[iStudent]['Faculty names'].split(',')
         else:
-            thisStudentChoices = ["Allard"]
+            thisStudentChoices = ["Nobody"]
 
         thisStudentChoices_Clean = list()
         for iFacultyName in range(len(thisStudentChoices)):
@@ -38,7 +40,11 @@ def translateStudentRequests(directoryName):
             fuzzyCompare = process.extractOne(facultyName,facultyList, scorer=fuzz.WRatio)
 
             if fuzzyCompare[1]<70:
-                print("This faculty is requested but has not declared availability: " + facultyName)                    #facultyList.append(facultyName)
+                print("This faculty is requested but has not declared availability: " + facultyName)
+                fuzzyCompare = process.extractOne(facultyName,missingFacultyList, scorer=fuzz.WRatio)
+                if fuzzyCompare[1]<70:
+                    missingFacultyList.append(facultyName)
+
             else:
                     facultyName = fuzzyCompare[0]
 
@@ -60,6 +66,12 @@ def translateStudentRequests(directoryName):
             recruitChoices.iloc[iStudent][iFaculty] = 1
 
     recruitChoices.fillna(0).to_excel(directoryName + '/forBot_StudentRequestsMatrix.xlsx')
+
+
+    print("Let's bug these faculty:")
+    missingFacultyListSorted = sorted(missingFacultyList, key=lambda x: x.split(" ")[-1])
+    print(map(lambda a: str(a), missingFacultyListSorted))
+
 
 if __name__ == '__main__':
     # test1.py executed as script

@@ -62,9 +62,9 @@ def makeSchedule(directoryName):
     # -- Read faculty attributes --
     dfFacultyAttributes = dfFacultyAvailabilityUnsorted_Core.transpose().tail(1).transpose()
 
-    #print(dfFacultyAttributes)
+    print(dfFacultyAttributes)
 
-    boolFemaleFaculty = list(dfFacultyAttributes["W/ngb/ngd"] == 1)
+    boolFemaleFaculty = list(dfFacultyAttributes["W"] == 1)
 
     facultyFemaleList = np.nonzero(boolFemaleFaculty)[0]
     facultyFemaleSet = set(facultyFemaleList)
@@ -104,10 +104,10 @@ def makeSchedule(directoryName):
     numAsterisks = boolAsterisk.count(1)
     studentAsteriskList = np.nonzero(boolAsterisk)[0]
 
-    boolFemaleStudent = list(dfStudentAttributes['Woman/ngb/ngd'] == 1)
+    boolFemaleStudent = list(dfStudentAttributes['W'] == 1)
     numFemaleStudents = boolFemaleStudent.count(1)
     studentFemaleList = np.nonzero(boolFemaleStudent)[0]
-
+    print("Number of W students: " + str(numFemaleStudents))
 
     ## --- setup ----
 
@@ -544,4 +544,4 @@ def makeSchedule(directoryName):
 if __name__ == '__main__':
     # test1.py executed as script
     # do something
-    makeSchedule('Example4_2020EntryLocations')
+    makeSchedule('Real2020Entry1')
