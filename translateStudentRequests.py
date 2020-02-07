@@ -76,4 +76,4 @@ def translateStudentRequests(directoryName):
 if __name__ == '__main__':
     # test1.py executed as script
     # do something
-    translateStudentRequests('Real2020Entry1')
+    translateStudentRequests('Real2020Entry2')

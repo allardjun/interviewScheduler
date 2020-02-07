@@ -12,7 +12,10 @@ def makeSchedule(directoryName):
     from fuzzywuzzy import fuzz
     from fuzzywuzzy import process
 
-    np.random.seed(1)
+
+    mySeed = np.random.randint(20)
+    np.random.seed(mySeed)
+    print("mySeed=" + str(mySeed))
 
     # parameters
 
@@ -570,4 +573,4 @@ def makeSchedule(directoryName):
 if __name__ == '__main__':
     # test1.py executed as script
     # do something
-    makeSchedule('Real2020Entry1')
+    makeSchedule('Real2020Entry2')
