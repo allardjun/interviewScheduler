@@ -74,6 +74,6 @@ def translateStudentRequests(directoryName):
 
 
 if __name__ == '__main__':
-    # test1.py executed as script
-    # do something
-    translateStudentRequests('Real2020Entry2')
+    # write the folder containing input data. Output data will be written to same folder.
+    FOLDERNAME = 'SampleData_RealAnon2020' # EDIT FOLDERNAME HERE
+    translateStudentRequests(FOLDERNAME)

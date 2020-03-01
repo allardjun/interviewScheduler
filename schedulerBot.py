@@ -4,7 +4,6 @@ def makeSchedule(directoryName):
     import pandas as pd
     import xlsxwriter
 
-
     import sys
 
     import matplotlib.pyplot as plt
@@ -12,14 +11,14 @@ def makeSchedule(directoryName):
     from fuzzywuzzy import fuzz
     from fuzzywuzzy import process
 
-
-    mySeed = np.random.randint(20)
-    np.random.seed(mySeed)
-    print("mySeed=" + str(mySeed))
+    # uncomment for repeatable runs
+    #mySeed = np.random.randint(20)
+    #np.random.seed(mySeed)
+    #print("mySeed=" + str(mySeed))
 
     # parameters
 
-    excelRow2Location = 1
+    excelRow2Location = 1 # whether the second row of facultyAvailability contains the faculty office location
 
     visualize = 0  # whether or not to create graphic showing simulated annealing
 
@@ -571,6 +570,6 @@ def makeSchedule(directoryName):
 
 
 if __name__ == '__main__':
-    # test1.py executed as script
-    # do something
-    makeSchedule('Real2020Entry2')
+    # write the folder containing input data. Output data will be written to same folder.
+    FOLDERNAME = 'SampleData_RealAnon2020' # EDIT FOLDERNAME HERE
+    makeSchedule(FOLDERNAME)

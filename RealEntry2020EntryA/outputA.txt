@@ -1,8 +1,0 @@
-mySeed=14
-Percent of female+ngb/ngd students meeting a female faculty: 100%
-Percent of requests satisfied, for students on asterisk list: On average:  93%, at worst:  83%
-Percent of requests satisfied, for all students: On average:  78%, at worst:  33%
-Percent schedule full, for students on asterisk list: On average:  67%, at worst:  58%
-Percent schedule full, for all students: On average:  64%, at worst:  50%
-Number of faculty meeting more than 9 students: 0
-Number of students meeting fewer than 6 faculty: 0
