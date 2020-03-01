@@ -22,7 +22,7 @@ def makeSchedule(directoryName):
 
     visualize = 0  # whether or not to create graphic showing simulated annealing
 
-    ntmax = int(5e4)  # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
+    ntmax = int(2e4)  # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
 
     # relative importances of the targets
     alpha_Female = 2**5
@@ -30,7 +30,6 @@ def makeSchedule(directoryName):
     alpha_AsteriskFull = 0#**3
     alpha_Full = 2**2
     alpha_minRequests = 2**4
-
 
     ## ----- Inputs ------
 
@@ -115,8 +114,9 @@ def makeSchedule(directoryName):
     #print("Number of W students: " + str(numFemaleStudents))
 
 
+    # --- SPECIAL ACCOMODATIONS ---
+    # anything that is better outside the loop, like getting the index of the student
     jStudent = studentNamesList.index(process.extractOne("Nguyen",studentNamesList, scorer=fuzz.WRatio)[0])
-
 
     ## --- setup ----
 
@@ -131,12 +131,10 @@ def makeSchedule(directoryName):
     E = np.Inf
     EMin = np.Inf
 
-
-    # Temperature function. Annealing function.
+    # Temperature function aka Annealing function.
     def kBT(ntAnneal):
         return sum([alpha_Female, alpha_AsteriskMinRequests, alpha_AsteriskFull, alpha_Full, alpha_minRequests]) * \
             np.power(1 - ntAnneal / float(ntmax+2), 6)
-
 
     if (visualize):
         fractionFemaleMeeting_array                   = np.zeros((1, ntmax))
@@ -159,31 +157,7 @@ def makeSchedule(directoryName):
         xPropose[:] = x
         yPropose[:] = y
 
-        filledAFreeSlot = 0
-        # pick a random timeslot. If there are both free faculty and free students, put one of each together.
-        iTimeslot = np.random.randint(numTimeslots)
-        freeFaculty = np.multiply(xPropose[iTimeslot, 0:numCore-1] == -1, boolFacultyAvailability[iTimeslot, 0:numCore-1])
-        if 0:#np.random.rand() < 0.00 and any(freeFaculty) and any(yPropose[iTimeslot, :] == -1):
-            facultyWithFree = np.nonzero(freeFaculty)
-            studentsWithEmpty = np.nonzero(yPropose[iTimeslot, :] == -1)
-            iFaculty = np.random.choice(facultyWithFree[0])
-            newStudent = 0
-            numAttempts = 0
-
-            while (not newStudent) and (numAttempts < len(studentsWithEmpty[0])):
-                iStudent = np.random.choice(studentsWithEmpty[0])
-                if iStudent not in xPropose[:, iFaculty]:
-                    newStudent = 1
-                numAttempts += 1
-            if numAttempts < len(studentsWithEmpty[0]):
-
-                xPropose[iTimeslot, iFaculty] = iStudent
-                filledAFreeSlot = 1
-                iFacultyFilled = iFaculty
-                iTimeslotFilled = iTimeslot
-                iStudentFilled = iStudent
-
-        elif np.random.rand() < numCore / float(numCore + numNoncore):  # single element change of core faculty schedule
+        if np.random.rand() < numCore / float(numCore + numNoncore):  # single element change of core faculty schedule
             # pick a random slot in x and put a random student in it
             facultyAvailableNow = 0
             newStudent = 0
@@ -199,9 +173,12 @@ def makeSchedule(directoryName):
                     if iStudent not in xPropose[:, iFaculty]:
                         newStudent = 1
 
-            # STUDENTS WITH PARTIAL SCHEDULES
-            if not (iTimeslot>5 and iStudent == jStudent):
-                xPropose[iTimeslot, iFaculty] = iStudent
+                # STUDENTS WITH PARTIAL SCHEDULES
+                if 0:
+                    if (iTimeslot>5 and iStudent == jStudent):
+                        facultyAvailableNow = 0
+
+            xPropose[iTimeslot, iFaculty] = iStudent
 
         else:  # attempt single element change of non-core faculty schedule
             # pick a random slot in x and put a student(who requested this faculty) in it
@@ -225,8 +202,6 @@ def makeSchedule(directoryName):
             if numAttemptsNonCore < numNoncore * numStudents:
                 xPropose[iTimeslot, iFaculty] = iStudent
 
-        # --- hard constraints ---
-
         # eliminate student double bookings ("clones") and generate student schedules
         for iStudent in range(numStudents):
             for iTimeslot in range(numTimeslots):
@@ -236,60 +211,62 @@ def makeSchedule(directoryName):
                 elif len(clones) == 1:
                     yPropose[iTimeslot, iStudent] = clones[0]
                 else:
-                    if filledAFreeSlot:
-                        print("ERROR this was supposed to be a free slot.")
                     pickFaculty = np.random.choice(clones)
                     xPropose[iTimeslot, clones] = -1
                     xPropose[iTimeslot, pickFaculty] = iStudent
                     yPropose[iTimeslot, iStudent] = pickFaculty
 
-        # prevent conflict overlap in last 3 timeslots on Tuesday
-        for iStudent in range(numStudents):
-            if not(yPropose[numTimeslots-1,iStudent]==-1):
+        # ------ hard constraints -----
+
+        if 0:
+            # prevent conflict overlap in last 3 timeslots on Tuesday
+            for iStudent in range(numStudents):
+                if not(yPropose[numTimeslots-1,iStudent]==-1):
+                    if not(yPropose[numTimeslots-2,iStudent]==-1):
+                        if np.random.rand()<0.5:
+                            clearMe=numTimeslots-1
+                        else:
+                            clearMe=numTimeslots-2
+                        xPropose[clearMe,int(yPropose[clearMe,iStudent])]=-1
+                        yPropose[clearMe,iStudent]=-1
+            for iFaculty in range(numCore):
+                if not(xPropose[numTimeslots-1,iFaculty]==-1):
+                    if not(xPropose[numTimeslots-2,iFaculty]==-1):
+                        if np.random.rand()<0.5:
+                            clearMe=numTimeslots-1
+                        else:
+                            clearMe=numTimeslots-2
+                        yPropose[clearMe,int(xPropose[clearMe,iFaculty])]=-1
+                        xPropose[clearMe,iFaculty]=-1
+
+            for iStudent in range(numStudents):
                 if not(yPropose[numTimeslots-2,iStudent]==-1):
-                    if np.random.rand()<0.5:
-                        clearMe=numTimeslots-1
-                    else:
-                        clearMe=numTimeslots-2
-                    xPropose[clearMe,int(yPropose[clearMe,iStudent])]=-1
-                    yPropose[clearMe,iStudent]=-1
-        for iFaculty in range(numCore):
-            if not(xPropose[numTimeslots-1,iFaculty]==-1):
+                    if not(yPropose[numTimeslots-3,iStudent]==-1):
+                        if np.random.rand()<0.5:
+                            clearMe=numTimeslots-2
+                        else:
+                            clearMe=numTimeslots-3
+                        xPropose[clearMe,int(yPropose[clearMe,iStudent])]=-1
+                        yPropose[clearMe,iStudent]=-1
+            for iFaculty in range(numCore):
                 if not(xPropose[numTimeslots-2,iFaculty]==-1):
-                    if np.random.rand()<0.5:
-                        clearMe=numTimeslots-1
-                    else:
-                        clearMe=numTimeslots-2
-                    yPropose[clearMe,int(xPropose[clearMe,iFaculty])]=-1
-                    xPropose[clearMe,iFaculty]=-1
+                    if not(xPropose[numTimeslots-3,iFaculty]==-1):
+                        if np.random.rand()<0.5:
+                            clearMe=numTimeslots-2
+                        else:
+                            clearMe=numTimeslots-3
+                        yPropose[clearMe,int(xPropose[clearMe,iFaculty])]=-1
+                        xPropose[clearMe,iFaculty]=-1
 
-        for iStudent in range(numStudents):
-            if not(yPropose[numTimeslots-2,iStudent]==-1):
-                if not(yPropose[numTimeslots-3,iStudent]==-1):
-                    if np.random.rand()<0.5:
-                        clearMe=numTimeslots-2
-                    else:
-                        clearMe=numTimeslots-3
-                    xPropose[clearMe,int(yPropose[clearMe,iStudent])]=-1
-                    yPropose[clearMe,iStudent]=-1
-        for iFaculty in range(numCore):
-            if not(xPropose[numTimeslots-2,iFaculty]==-1):
-                if not(xPropose[numTimeslots-3,iFaculty]==-1):
-                    if np.random.rand()<0.5:
-                        clearMe=numTimeslots-2
-                    else:
-                        clearMe=numTimeslots-3
-                    yPropose[clearMe,int(xPropose[clearMe,iFaculty])]=-1
-                    xPropose[clearMe,iFaculty]=-1
-
-        # Arthur needs 15 more minutes of sleep while partying in Spain while the rest of us work
-        iStudentArthur245 = int(xPropose[2,iArthur])
-        #print(iStudentArthur245)
-        if (not (iStudentArthur245==-1)):
-            #print("student " + str(yPropose[3,iStudentArthur245]))
-            if (not (yPropose[3,iStudentArthur245] == -1)):
-                xPropose[3,int(yPropose[3,iStudentArthur245])] = -1
-                yPropose[3,iStudentArthur245] = -1
+        if 0:
+            # Arthur needs 15 more minutes of sleep while partying in Spain while the rest of us work
+            iStudentArthur245 = int(xPropose[2,iArthur])
+             #print(iStudentArthur245)
+            if (not (iStudentArthur245==-1)):
+                #print("student " + str(yPropose[3,iStudentArthur245]))
+                if (not (yPropose[3,iStudentArthur245] == -1)):
+                    xPropose[3,int(yPropose[3,iStudentArthur245])] = -1
+                    yPropose[3,iStudentArthur245] = -1
 
         # --- compute targets ---
 
