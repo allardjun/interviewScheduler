@@ -53,7 +53,7 @@ def makeSchedule(directoryName):
     numTimeslots = len(timeslotNames)
 
     print(timeslotNames)
-    print(numTimeslots)
+    #print(numTimeslots)
 
     facultyNames = list(dfFacultyAvailabilityUnsorted.index)
 
