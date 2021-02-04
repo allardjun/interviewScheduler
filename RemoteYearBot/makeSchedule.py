@@ -42,7 +42,8 @@ def makeSchedule(directoryName):
 
     # ---------------- OPTIONS AND PARAMETERS -------------------------------
 
-    ntmax = int(10)#int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
+    # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
+    ntmax = int(10)
 
     # relative importances of the targets
     alpha = {
@@ -53,7 +54,9 @@ def makeSchedule(directoryName):
         'AsteriskFullness': 0,
         'AsteriskRequests': 2**7
     }
-    tooManyStudentsToAFaculty = 9
+
+    tooManyStudentsToAFaculty = 9  # try to make sure each faculty meets no more than this many students
+    criticalNumberOfInterviews = 5  # try to make sure each students meets at least this many faculty
 
     # Temperature function aka Annealing function.
     annealingPrefactor = sum(alpha.values())
@@ -98,9 +101,11 @@ def makeSchedule(directoryName):
     print(studentNamesList)
 
     # --------------- Read student attributes
-    dfStudentAttributes = pd.read_excel(directoryName + '/forBot_StudentRequestList.xlsx', index_col=0)
+    dfStudentAttributes = pd.read_excel(
+        directoryName + '/forBot_StudentRequestList.xlsx', index_col=0)
     if not all(dfStudentRequests.index == studentNames):
-        print('The student names in the xlsx files do not match.') # this should always pass, since the above file was made automatically
+        # this should always pass, since the above file was made automatically
+        print('The student names in the xlsx files do not match.')
 
     boolAsterisk = list(dfStudentAttributes['Asterisk'] == 1)
     numAsterisks = boolAsterisk.count(1)
@@ -171,64 +176,111 @@ def makeSchedule(directoryName):
         # Nothing here yet!
 
         # --------------- Compute targets
-        # Gendered students meet women faculty
-        numMeetingWomen = 0
-        for iiStudent in range(numGenderedStudents):
-            numMeetingWomen += any(set(yPropose[:, studentGenderedList[iiStudent]]) & facultyWomenSet)
-        fractionGenderedMeeting = numMeetingWomen / float(numGenderedStudents)
 
-        # Asterisk students get requested faculty
+        # TARGET: Asterisk students get requested faculty
         minFractionOfAsteriskRequestSatisfied = 1
         totalFractionOfAsteriskRequestSatisfied = 0
         for iiStudent in range(numAsterisks):
             iStudent = studentAsteriskList[iiStudent]
+            fractionOfAsteriskRequestSatisfied = len(set(np.where(boolStudentRequests[iStudent, :] == 1)[0]) & set(
+                yPropose[:, iStudent])) / float(np.count_nonzero(boolStudentRequests[iStudent, :] == 1))
+            totalFractionOfAsteriskRequestSatisfied = totalFractionOfAsteriskRequestSatisfied + \
+                fractionOfAsteriskRequestSatisfied
+            if minFractionOfAsteriskRequestSatisfied > fractionOfAsteriskRequestSatisfied:
+                minFractionOfAsteriskRequestSatisfied = fractionOfAsteriskRequestSatisfied
 
-        fractionOfAsteriskRequestSatisfied = len(set(np.where(boolStudentRequests[iStudent, :] == 1)[0]) & set(yPropose[:, iStudent])) / float(np.count_nonzero(boolStudentRequests[iStudent, :] == 1))
-        totalFractionOfAsteriskRequestSatisfied = totalFractionOfAsteriskRequestSatisfied + fractionOfAsteriskRequestSatisfied
-        if minFractionOfAsteriskRequestSatisfied > fractionOfAsteriskRequestSatisfied:
-            minFractionOfAsteriskRequestSatisfied = fractionOfAsteriskRequestSatisfied
-
-
-        # Asterisk students get full schedules
+        # TARGET: Asterisk students get full schedules
         fractionAsteriskFull = sum(yPropose[:, studentAsteriskList] != -1) / float(numTimeslots)
-        totalFractionAsteriskFull = sum(fractionAsteriskFull)
         minFractionAsteriskFull = min(fractionAsteriskFull)
+        totalFractionAsteriskFull = sum(fractionAsteriskFull)
 
-        # All students get full schedules
-        yProposeFulltime = yPropose#np.delete(yPropose,jStudent,1)
-        fractionFull = sum(yProposeFulltime != -1) / float(numTimeslots)
-        totalFractionFull = sum(fractionFull)
-        minFractionFull = min(fractionFull)
-
-        numFiveOrLess = sum(fractionFull <= 5.0/float(numTimeslots))
-        #print(numFiveOrLess)
-
-        # All students get requested faculty
+        # TARGET: All students get requested faculty
         minFractionOfRequestSatisfied = 1
         totalFractionOfRequestSatisfied = 0
         for iStudent in range(numStudents):
             if np.count_nonzero(boolStudentRequests[iStudent, :] == 1) > 0:
-                fractionOfRequestSatisfied = len(set(np.where(boolStudentRequests[iStudent, :] == 1)[0]) & set(yPropose[:, iStudent]) ) / float(np.count_nonzero(boolStudentRequests[iStudent, :] == 1))
+                fractionOfRequestSatisfied = len(set(np.where(boolStudentRequests[iStudent, :] == 1)[0]) & set(
+                    yPropose[:, iStudent])) / float(np.count_nonzero(boolStudentRequests[iStudent, :] == 1))
             else:
                 fractionOfRequestSatisfied = 1
             totalFractionOfRequestSatisfied = totalFractionOfRequestSatisfied + fractionOfRequestSatisfied
             if minFractionOfRequestSatisfied > fractionOfRequestSatisfied:
                 minFractionOfRequestSatisfied = fractionOfRequestSatisfied
 
-        # Make sure no faculty gets more than 9 students
+        # TARGET: All students get full schedules
+        # np.delete(yPropose,jStudent,1) # TODO Modify to account for students without full schedules.
+        yProposeFulltime = yPropose
+        fractionFull = sum(yProposeFulltime != -1) / float(numTimeslots)
+        totalFractionFull = sum(fractionFull)
+        minFractionFull = min(fractionFull)
+
+        # TARGET: Student should meet at least a set number of faculty
+        numStudentsCriticallyLow = sum(
+            fractionFull <= criticalNumberOfInterviews/float(numTimeslots))
+
+        # TARGET: Students should meet in their own timezone block
+        numberTimezoneViolations = 0
+
+        # TARGET: Gendered students meet women faculty
+        numMeetingWomen = 0
+        for iiStudent in range(numGenderedStudents):
+            numMeetingWomen += any(set(yPropose[:,
+                                                studentGenderedList[iiStudent]]) & facultyWomenSet)
+        fractionGenderedMeeting = numMeetingWomen / float(numGenderedStudents)
+
+        # TARGET: Make sure no faculty gets more than 9 students
         facultyMeetingTooManyStudents = 0
         for iFaculty in range(numFaculty):
-            numMeetings = numTimeslots - sum(xPropose[:,iFaculty]==-1)
+            numMeetings = numTimeslots - sum(xPropose[:, iFaculty] == -1)
             if numMeetings > tooManyStudentsToAFaculty:
                 facultyMeetingTooManyStudents += 1
 
         # --------------- Boltzmann test
+        EPropose = - (
+            alpha['Timezone'] * numberTimezoneViolations
+            + alpha['Gender'] * fractionGenderedMeeting
+            - facultyMeetingTooManyStudents
+            - numStudentsCriticallyLow
+            + alpha['AsteriskRequests'] * (10*minFractionOfAsteriskRequestSatisfied +
+                                           totalFractionOfAsteriskRequestSatisfied / float(numAsterisks))
+            + alpha['AsteriskFullness'] *
+            (10*minFractionAsteriskFull + totalFractionAsteriskFull / float(numAsterisks))
+            + alpha['Fullness'] * (10*minFractionFull + totalFractionFull / float(numStudents))
+            + alpha['Requests'] * (10*minFractionOfRequestSatisfied +
+                                   totalFractionOfRequestSatisfied / float(numStudents))
+        )
+
+        # Boltzmann test
+        # Do it as two if statements to avoid runtime overflow.
+        if EPropose < E or (np.random.rand() < np.exp(-(EPropose - E) / kBT(nt))):
+            E = EPropose
+            x[:] = xPropose
+            y[:] = yPropose
+
         # --------------- Min test
+        if EPropose < EMin:
+            EMin = EPropose
+            xMin[:] = xPropose
+            yMin[:] = yPropose
 
-        # ---------------- EXPORT TO SPREADSHEETS -----------------------------
+            fractionGenderedMeeting_min = fractionGenderedMeeting
+            minFractionOfAsteriskRequestSatisfied_min = minFractionOfAsteriskRequestSatisfied
+            totalFractionOfAsteriskRequestSatisfied_min = totalFractionOfAsteriskRequestSatisfied
+            minFractionAsteriskFull_min = minFractionAsteriskFull
+            totalFractionAsteriskFull_min = totalFractionAsteriskFull
+            minFractionFull_min = minFractionFull
+            totalFractionFull_min = totalFractionFull
+            minFractionOfRequestSatisfied_min = minFractionOfRequestSatisfied
+            totalFractionOfRequestSatisfied_min = totalFractionOfRequestSatisfied
+            E_min = E
 
-        # ---------------- REPORTING - HOW'D WE DO? -----------------------------
-        # ---------------- VISUALIZE ANNEALING ----------------------------------
+    # finished annealing
+    x[:] = xMin
+    y[:] = yMin
+
+    # ---------------- EXPORT TO SPREADSHEETS -----------------------------
+    # ---------------- REPORTING - HOW'D WE DO? -----------------------------
+    # ---------------- VISUALIZE ANNEALING ----------------------------------
 
 
 if __name__ == '__main__':
