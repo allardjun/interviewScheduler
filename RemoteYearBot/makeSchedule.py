@@ -42,9 +42,11 @@ def makeSchedule(directoryName):
 
     # ---------------- OPTIONS AND PARAMETERS -------------------------------
 
-    visualize = 0  # whether or not to create graphic showing simulated annealing
+    visualize = 1  # whether or not to create graphic showing simulated annealing
+    if visualize:
+        listOfTargets = []
 
-    ntmax = int(10) # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
+    ntmax = int(100) # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
 
     # relative importances of the targets
     alpha = {
@@ -132,6 +134,8 @@ def makeSchedule(directoryName):
     xMin = np.copy(x)
     yMin = np.copy(y)
 
+    proposalTargets = Targets()
+
     E = np.Inf
     EMin = np.Inf
 
@@ -181,76 +185,77 @@ def makeSchedule(directoryName):
         # --------------- Compute targets
 
         # TARGET: Asterisk students get requested faculty
-        minFractionOfAsteriskRequestSatisfied = 1
-        totalFractionOfAsteriskRequestSatisfied = 0
+        proposalTargets.FractionOfAsteriskRequestSatisfied["min"] = 1
+        proposalTargets.FractionOfAsteriskRequestSatisfied["total"] = 0
         for iiStudent in range(numAsterisks):
             iStudent = studentAsteriskList[iiStudent]
             fractionOfAsteriskRequestSatisfied = len(set(np.where(boolStudentRequests[iStudent, :] == 1)[0]) & set(
                 yPropose[:, iStudent])) / float(np.count_nonzero(boolStudentRequests[iStudent, :] == 1))
-            totalFractionOfAsteriskRequestSatisfied = totalFractionOfAsteriskRequestSatisfied + \
+            proposalTargets.FractionOfAsteriskRequestSatisfied["total"] = proposalTargets.FractionOfAsteriskRequestSatisfied["total"] + \
                 fractionOfAsteriskRequestSatisfied
-            if minFractionOfAsteriskRequestSatisfied > fractionOfAsteriskRequestSatisfied:
-                minFractionOfAsteriskRequestSatisfied = fractionOfAsteriskRequestSatisfied
+            if proposalTargets.FractionOfAsteriskRequestSatisfied["min"] > fractionOfAsteriskRequestSatisfied:
+                proposalTargets.FractionOfAsteriskRequestSatisfied["min"] = fractionOfAsteriskRequestSatisfied
 
         # TARGET: Asterisk students get full schedules
         fractionAsteriskFull = sum(yPropose[:, studentAsteriskList] != -1) / float(numTimeslots)
-        minFractionAsteriskFull = min(fractionAsteriskFull)
-        totalFractionAsteriskFull = sum(fractionAsteriskFull)
+        proposalTargets.FractionAsteriskFull["min"] = min(fractionAsteriskFull)
+        proposalTargets.FractionAsteriskFull["total"] = sum(fractionAsteriskFull)
 
         # TARGET: All students get requested faculty
-        minFractionOfRequestSatisfied = 1
-        totalFractionOfRequestSatisfied = 0
+        proposalTargets.FractionOfRequestSatisfied["min"] = 1
+        proposalTargets.FractionOfRequestSatisfied["total"] = 0
         for iStudent in range(numStudents):
             if np.count_nonzero(boolStudentRequests[iStudent, :] == 1) > 0:
                 fractionOfRequestSatisfied = len(set(np.where(boolStudentRequests[iStudent, :] == 1)[0]) & set(
                     yPropose[:, iStudent])) / float(np.count_nonzero(boolStudentRequests[iStudent, :] == 1))
             else:
                 fractionOfRequestSatisfied = 1
-            totalFractionOfRequestSatisfied = totalFractionOfRequestSatisfied + fractionOfRequestSatisfied
-            if minFractionOfRequestSatisfied > fractionOfRequestSatisfied:
-                minFractionOfRequestSatisfied = fractionOfRequestSatisfied
+            proposalTargets.FractionOfRequestSatisfied["total"] = proposalTargets.FractionOfRequestSatisfied["total"] + fractionOfRequestSatisfied
+            if proposalTargets.FractionOfRequestSatisfied["min"] > fractionOfRequestSatisfied:
+                proposalTargets.FractionOfRequestSatisfied["min"] = fractionOfRequestSatisfied
 
         # TARGET: All students get full schedules
         # np.delete(yPropose,jStudent,1) # TODO Modify to account for students without full schedules.
         yProposeFulltime = yPropose
         fractionFull = sum(yProposeFulltime != -1) / float(numTimeslots)
-        totalFractionFull = sum(fractionFull)
-        minFractionFull = min(fractionFull)
+        proposalTargets.FractionFull["total"] = sum(fractionFull)
+        proposalTargets.FractionFull["min"] = min(fractionFull)
 
         # TARGET: Student should meet at least a set number of faculty
-        numStudentsCriticallyLow = sum(
+        proposalTargets.numStudentsCriticallyLow = sum(
             fractionFull <= criticalNumberOfInterviews/float(numTimeslots))
 
         # TARGET: Students should meet in their own timezone block
-        numberTimezoneViolations = 0
+        proposalTargets.numberTimezoneViolations = 0
 
         # TARGET: Gendered students meet women faculty
-        numMeetingWomen = 0
+        proposalTargets.numMeetingWomen = 0
         for iiStudent in range(numGenderedStudents):
-            numMeetingWomen += any(set(yPropose[:,
+            proposalTargets.numMeetingWomen += any(set(yPropose[:,
                                                 studentGenderedList[iiStudent]]) & facultyWomenSet)
-        fractionGenderedMeeting = numMeetingWomen / float(numGenderedStudents)
+        proposalTargets.fractionGenderedMeeting = proposalTargets.numMeetingWomen / float(numGenderedStudents)
 
         # TARGET: Make sure no faculty gets more than 9 students
-        facultyMeetingTooManyStudents = 0
+        proposalTargets.facultyMeetingTooManyStudents = 0
         for iFaculty in range(numFaculty):
             numMeetings = numTimeslots - sum(xPropose[:, iFaculty] == -1)
             if numMeetings > tooManyStudentsToAFaculty:
-                facultyMeetingTooManyStudents += 1
+                proposalTargets.facultyMeetingTooManyStudents += 1
 
         # --------------- Boltzmann test
         EPropose = - (
-            alpha['Timezone'] * numberTimezoneViolations
-            + alpha['Gender'] * fractionGenderedMeeting
-            - facultyMeetingTooManyStudents
-            - numStudentsCriticallyLow
-            + alpha['AsteriskRequests'] * (10*minFractionOfAsteriskRequestSatisfied +
-                                           totalFractionOfAsteriskRequestSatisfied / float(numAsterisks))
-            + alpha['AsteriskFullness'] *
-            (10*minFractionAsteriskFull + totalFractionAsteriskFull / float(numAsterisks))
-            + alpha['Fullness'] * (10*minFractionFull + totalFractionFull / float(numStudents))
-            + alpha['Requests'] * (10*minFractionOfRequestSatisfied +
-                                   totalFractionOfRequestSatisfied / float(numStudents))
+            alpha['Timezone'] * proposalTargets.numberTimezoneViolations
+            + alpha['Gender'] * proposalTargets.fractionGenderedMeeting
+                              - proposalTargets.facultyMeetingTooManyStudents
+                              - proposalTargets.numStudentsCriticallyLow
+            + alpha['AsteriskRequests'] * (10*proposalTargets.FractionOfAsteriskRequestSatisfied["min"]
+                                            + proposalTargets.FractionOfAsteriskRequestSatisfied["total"] / float(numAsterisks))
+            + alpha['AsteriskFullness'] * (10*proposalTargets.FractionAsteriskFull["min"]
+                                            + proposalTargets.FractionAsteriskFull["total"] / float(numAsterisks))
+            + alpha['Fullness'] * (10*proposalTargets.FractionFull["min"]
+                                    + proposalTargets.FractionFull["total"] / float(numStudents))
+            + alpha['Requests'] * (10*proposalTargets.FractionOfRequestSatisfied["min"]
+                                    + proposalTargets.FractionOfRequestSatisfied["total"] / float(numStudents))
         )
 
         # Boltzmann test
@@ -266,28 +271,11 @@ def makeSchedule(directoryName):
             xMin[:] = xPropose
             yMin[:] = yPropose
 
-            fractionGenderedMeeting_min = fractionGenderedMeeting
-            minFractionOfAsteriskRequestSatisfied_min = minFractionOfAsteriskRequestSatisfied
-            totalFractionOfAsteriskRequestSatisfied_min = totalFractionOfAsteriskRequestSatisfied
-            minFractionAsteriskFull_min = minFractionAsteriskFull
-            totalFractionAsteriskFull_min = totalFractionAsteriskFull
-            minFractionFull_min = minFractionFull
-            totalFractionFull_min = totalFractionFull
-            minFractionOfRequestSatisfied_min = minFractionOfRequestSatisfied
-            totalFractionOfRequestSatisfied_min = totalFractionOfRequestSatisfied
-            E_min = E
+            minTargets = proposalTargets.copy()
 
         if visualize:
-            fractionFemaleMeeting_array[0, nt]                   = fractionFemaleMeeting
-            minFractionOfAsteriskRequestSatisfied_array[0, nt]   = minFractionOfAsteriskRequestSatisfied
-            totalFractionOfAsteriskRequestSatisfied_array[0, nt] = totalFractionOfAsteriskRequestSatisfied
-            minFractionAsteriskFull_array[0, nt]                 = minFractionAsteriskFull
-            totalFractionAsteriskFull_array[0, nt]               = totalFractionAsteriskFull
-            minFractionFull_array[0, nt]                         = minFractionFull
-            totalFractionFull_array[0, nt]                       = totalFractionFull
-            minFractionOfRequestSatisfied_array[0, nt]           = minFractionOfRequestSatisfied
-            totalFractionOfRequestSatisfied_array[0, nt]         = totalFractionOfRequestSatisfied
-            E_array[0, nt] = E
+            proposalTargets.E = EPropose
+            listOfTargets.append(proposalTargets.copy())
 
     # finished annealing
     x[:] = xMin
@@ -364,6 +352,47 @@ def makeSchedule(directoryName):
 
     # ---------------- REPORTING - HOW'D WE DO? -----------------------------
     # ---------------- VISUALIZE ANNEALING ----------------------------------
+    if visualize:
+        fig = plt.figure(figsize=(18, 16))
+
+        numberOfPlots = len(vars(proposalTargets))
+
+        for i, iTarget in enumerate(vars(proposalTargets).items(),start=1):
+
+            if isinstance(iTarget[1],dict): # if it's a target with a min and a mean
+                ax = fig.add_subplot(numberOfPlots, 1, i)
+                ax.set_ylabel(iTarget[0])
+                for nt in range(ntmax):
+                    plt.plot(nt,getattr(listOfTargets[nt],iTarget[0])['min'], '+b')
+                    plt.plot(nt,getattr(listOfTargets[nt],iTarget[0])['total'] / float(numStudents), 'or')
+            else:
+                ax = fig.add_subplot(numberOfPlots, 1, i)
+                ax.set_ylabel(iTarget[0])
+                for nt in range(ntmax):
+                    plt.plot(nt,getattr(listOfTargets[nt],iTarget[0]), '+b')
+
+        plt.show()
+
+class Targets:
+    def __init__(self):
+        self.E = 0
+        self.numberTimezoneViolations = 0
+        self.fractionGenderedMeeting = 0
+        self.facultyMeetingTooManyStudents = 0
+        self.numStudentsCriticallyLow = 0
+        self.FractionAsteriskFull = {'min':0, 'total':0}
+        self.FractionOfAsteriskRequestSatisfied = {'min':0, 'total':0}
+        self.FractionFull= {'min':0, 'total':0}
+        self.FractionOfRequestSatisfied = {'min':0, 'total':0}
+
+    def copy(self):
+        targetCopy = Targets()
+        for iTargetName, iTargetValue in vars(self).items():
+            if isinstance(iTargetValue,dict):
+                setattr(targetCopy,iTargetName,{'min':iTargetValue['min'], 'total':iTargetValue['total']})
+            else:
+                setattr(targetCopy,iTargetName,iTargetValue)
+        return targetCopy
 
 
 if __name__ == '__main__':
