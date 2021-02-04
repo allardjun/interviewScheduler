@@ -42,8 +42,9 @@ def makeSchedule(directoryName):
 
     # ---------------- OPTIONS AND PARAMETERS -------------------------------
 
-    # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
-    ntmax = int(10)
+    visualize = 0  # whether or not to create graphic showing simulated annealing
+
+    ntmax = int(10) # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
 
     # relative importances of the targets
     alpha = {
@@ -69,6 +70,8 @@ def makeSchedule(directoryName):
 
     dfFacultyAvailability = pd.read_excel(
         directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx', index_col=0).fillna(0)
+
+
 
     dfFacultyAttributes = dfFacultyAvailability.head(2).transpose()
     print(dfFacultyAttributes)
@@ -274,11 +277,91 @@ def makeSchedule(directoryName):
             totalFractionOfRequestSatisfied_min = totalFractionOfRequestSatisfied
             E_min = E
 
+        if visualize:
+            fractionFemaleMeeting_array[0, nt]                   = fractionFemaleMeeting
+            minFractionOfAsteriskRequestSatisfied_array[0, nt]   = minFractionOfAsteriskRequestSatisfied
+            totalFractionOfAsteriskRequestSatisfied_array[0, nt] = totalFractionOfAsteriskRequestSatisfied
+            minFractionAsteriskFull_array[0, nt]                 = minFractionAsteriskFull
+            totalFractionAsteriskFull_array[0, nt]               = totalFractionAsteriskFull
+            minFractionFull_array[0, nt]                         = minFractionFull
+            totalFractionFull_array[0, nt]                       = totalFractionFull
+            minFractionOfRequestSatisfied_array[0, nt]           = minFractionOfRequestSatisfied
+            totalFractionOfRequestSatisfied_array[0, nt]         = totalFractionOfRequestSatisfied
+            E_array[0, nt] = E
+
     # finished annealing
     x[:] = xMin
     y[:] = yMin
 
     # ---------------- EXPORT TO SPREADSHEETS -----------------------------
+    if 1:
+        # --------------- All in one file, one sheet -----------------------
+        # output faculty schedules with names
+        xNames = np.empty((numTimeslots, numFaculty), dtype='object')
+        for iFaculty in range(numFaculty):
+            for iTimeslot in range(numTimeslots):
+                if x[iTimeslot, iFaculty] == -1:
+                    if boolFacultyAvailability[iTimeslot, iFaculty] == 0:
+                        xNames[iTimeslot, iFaculty] = "..."
+                    else:
+                        xNames[iTimeslot, iFaculty] = "open"
+                else:
+                    xNames[iTimeslot, iFaculty] = studentNames[int(x[iTimeslot, iFaculty])]
+        pd.DataFrame(data=xNames, index=timeslotNames, columns=facultyNames).to_excel(
+            directoryName + '/fromBot_FacultySchedules.xlsx')
+
+        # output student schedules with names
+        yNames = np.empty((numTimeslots, numStudents), dtype='object')
+        for iStudent in range(numStudents):
+            for iTimeslot in range(numTimeslots):
+                if y[iTimeslot, iStudent] == -1:
+                    yNames[iTimeslot, iStudent] = "..."
+                else:
+                    yNames[iTimeslot, iStudent] = facultyNames[int(y[iTimeslot, iStudent])]
+        pd.DataFrame(data=yNames, index=timeslotNames, columns=studentNames).to_excel(
+            directoryName + '/fromBot_StudentSchedules.xlsx')
+
+    if 1:
+        # --------------- Different sheets -----------------------
+        writer = pd.ExcelWriter(directoryName + '/fromBot_FacultySchedules_1SheetEach.xlsx', engine='xlsxwriter')
+        # output faculty schedules with names
+        for iFaculty in range(numFaculty):
+            xNames = np.empty((numTimeslots, 1), dtype='object')
+            nonEmpty = 0
+            for iTimeslot in range(numTimeslots):
+                if x[iTimeslot, iFaculty] == -1:
+                    if boolFacultyAvailability[iTimeslot, iFaculty] == 0:
+                        xNames[iTimeslot] = "..."
+                    else:
+                        xNames[iTimeslot] = "open"
+                else:
+                    xNames[iTimeslot] = studentNames[int(x[iTimeslot, iFaculty])]
+                    nonEmpty = 1
+            if nonEmpty == 1:
+                sheetName=facultyNames[iFaculty].replace(" ", "")
+                pd.DataFrame(data=xNames, index=timeslotNames, columns=[facultyNames[iFaculty]]
+                    ).to_excel(writer,sheet_name=sheetName)
+                writer.sheets[sheetName].set_column('A:A', 35)
+                writer.sheets[sheetName].set_column('B:B', 30)
+        writer.save()
+
+        writer = pd.ExcelWriter(directoryName + '/fromBot_StudentSchedules_1SheetEach.xlsx', engine='xlsxwriter')
+        # output student schedules with names
+        for iStudent in range(numStudents):
+            yNames = np.empty((numTimeslots, 2), dtype='object')
+            for iTimeslot in range(numTimeslots):
+                if y[iTimeslot, iStudent] == -1:
+                    yNames[iTimeslot,0] = "..."
+                else:
+                    yNames[iTimeslot,0] = facultyNames[int(y[iTimeslot, iStudent])]
+                    yNames[iTimeslot,1] = dfFacultyAttributes.iloc[int(y[iTimeslot, iStudent]),0]
+            sheetName = studentNames[iStudent].replace(" ", "").replace("(", "").replace(")", "")
+            pd.DataFrame(data=yNames, index=timeslotNames, columns=[studentNames[iStudent], "Location"]
+                ).to_excel(writer,sheet_name=sheetName)
+            writer.sheets[sheetName].set_column('A:A', 35)
+            writer.sheets[sheetName].set_column('B:C', 30)
+        writer.save()
+
     # ---------------- REPORTING - HOW'D WE DO? -----------------------------
     # ---------------- VISUALIZE ANNEALING ----------------------------------
 
