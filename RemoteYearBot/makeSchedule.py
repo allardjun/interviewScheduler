@@ -69,6 +69,12 @@ def makeSchedule(directoryName):
         'AP':(8,9,18,19),
         'India':(20,21,22,23)
     }
+    # day
+    slotsInDay = {
+        'Wed':range(0,9),
+        'Thu':range(10,23),
+        'Fri':range(24,31)
+    }
 
     # Temperature function aka Annealing function.
     annealingPrefactor = sum(alpha.values())
@@ -123,6 +129,16 @@ def makeSchedule(directoryName):
 
     timezone = dfStudentAttributes['Timezone']
 
+    slotsForStudent = []
+    for iStudent in range(numStudents):
+        slotsForThisStudent = set()
+        for day in ('Wed','Thu','Fri'):
+            if dfStudentAttributes.iloc[iStudent].loc[day]==1:
+                slotsForThisStudent = slotsForThisStudent | set(slotsInDay[day])
+        slotsForThisStudent = slotsForThisStudent & set(slotsInTimezone[timezone[iStudent]])
+        slotsForStudent.append(list(slotsForThisStudent))
+        print(slotsForStudent[iStudent])
+
     # --------------- Special accommodations setup
     # blank for now!
 
@@ -161,7 +177,7 @@ def makeSchedule(directoryName):
                     iStudent = np.random.randint(numStudents)
                     if iStudent not in xPropose[:, iFaculty]:
                         newStudent = 1
-                        if iTimeslot in slotsInTimezone[timezone[iStudent]]:
+                        if iTimeslot in slotsForStudent[iStudent]:
                             timezoneSatisfied = 1
             xPropose[iTimeslot, iFaculty] = iStudent
 
