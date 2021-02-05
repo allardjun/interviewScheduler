@@ -46,7 +46,7 @@ def makeSchedule(directoryName):
     if visualize:
         listOfTargets = []
 
-    ntmax = int(100) # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
+    ntmax = int(2e3) # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
 
     # relative importances of the targets
     alpha = {
@@ -61,6 +61,15 @@ def makeSchedule(directoryName):
     tooManyStudentsToAFaculty = 9  # try to make sure each faculty meets no more than this many students
     criticalNumberOfInterviews = 5  # try to make sure each students meets at least this many faculty
 
+
+    # timezones
+    slotsInTimezone = {
+        'EST':(0,1,2,3,10,11,12,13,24,25,26,27),
+        'PST':(4,5,6,7,14,15,16,17,28,29,30,31),
+        'AP':(8,9,18,19),
+        'India':(20,21,22,23)
+    }
+
     # Temperature function aka Annealing function.
     annealingPrefactor = sum(alpha.values())
 
@@ -73,17 +82,12 @@ def makeSchedule(directoryName):
     dfFacultyAvailability = pd.read_excel(
         directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx', index_col=0).fillna(0)
 
-
-
     dfFacultyAttributes = dfFacultyAvailability.head(2).transpose()
-    print(dfFacultyAttributes)
 
     dfFacultyAvailability.drop(dfFacultyAvailability.head(2).index, inplace=True)
-    print(dfFacultyAvailability)
     boolFacultyAvailability = np.nan_to_num(dfFacultyAvailability.to_numpy())
 
     facultyNames = list(dfFacultyAvailability.columns)
-    print(facultyNames)
     numFaculty = len(facultyNames)
 
     boolWomenFaculty = list(dfFacultyAttributes["W"] == 1)
@@ -92,7 +96,6 @@ def makeSchedule(directoryName):
 
     timeslotNames = dfFacultyAvailability.index
     numTimeslots = len(timeslotNames)
-    print(timeslotNames)
 
     # --------------- Get student requests
     dfStudentRequests = pd.read_excel(
@@ -102,8 +105,6 @@ def makeSchedule(directoryName):
     studentNames = dfStudentRequests.index
     studentNamesList = list(studentNames)
     numStudents = len(studentNames)
-    print(studentNames)
-    print(studentNamesList)
 
     # --------------- Read student attributes
     dfStudentAttributes = pd.read_excel(
@@ -115,12 +116,12 @@ def makeSchedule(directoryName):
     boolAsterisk = list(dfStudentAttributes['Asterisk'] == 1)
     numAsterisks = boolAsterisk.count(1)
     studentAsteriskList = np.nonzero(boolAsterisk)[0]
-    print(studentAsteriskList)
 
     boolGenderedStudent = list(dfStudentAttributes['W'] == 1)
     numGenderedStudents = boolGenderedStudent.count(1)
     studentGenderedList = np.nonzero(boolGenderedStudent)[0]
-    print(studentGenderedList)
+
+    timezone = dfStudentAttributes['Timezone']
 
     # --------------- Special accommodations setup
     # blank for now!
@@ -145,80 +146,86 @@ def makeSchedule(directoryName):
         xPropose[:] = x
         yPropose[:] = y
 
-        # --------------- single element change of core faculty schedule
-        # --------------- pick a random slot in x (faculty schedule) and put a random student in it
-        facultyAvailableNow = 0
-        newStudent = 0
-        while not facultyAvailableNow or not newStudent:
-            iFaculty = np.random.randint(numFaculty)
-            iTimeslot = np.random.randint(numTimeslots)
-            facultyAvailableNow = boolFacultyAvailability[iTimeslot, iFaculty]
-            if facultyAvailableNow:
-                iStudent = np.random.randint(numStudents)
-                if iStudent not in xPropose[:, iFaculty]:
-                    newStudent = 1
-        xPropose[iTimeslot, iFaculty] = iStudent
+        hardConstraintSatisfied = 0
+        while not hardConstraintSatisfied:
+            # --------------- single element change of core faculty schedule
+            # --------------- pick a random slot in x (faculty schedule) and put a random student in it
+            facultyAvailableNow = 0
+            newStudent = 0
+            timezoneSatisfied = 0
+            while not facultyAvailableNow or not newStudent or not timezoneSatisfied:
+                iFaculty = np.random.randint(numFaculty)
+                iTimeslot = np.random.randint(numTimeslots)
+                facultyAvailableNow = boolFacultyAvailability[iTimeslot, iFaculty]
+                if facultyAvailableNow:
+                    iStudent = np.random.randint(numStudents)
+                    if iStudent not in xPropose[:, iFaculty]:
+                        newStudent = 1
+                        if iTimeslot in slotsInTimezone[timezone[iStudent]]:
+                            timezoneSatisfied = 1
+            xPropose[iTimeslot, iFaculty] = iStudent
 
-        # --------------- Special accommodations: students with partial schedules
-        # Nothing here yet!
+            # --------------- Special accommodations: students with partial schedules
+            # Nothing here yet!
 
-        # --------------- eliminate student double bookings ("clones") and generate student schedules
-        for iStudent in range(numStudents):
-            for iTimeslot in range(numTimeslots):
-                clones = list(np.nonzero(xPropose[iTimeslot, :] == iStudent))[0]
-                if len(clones) == 0:
-                    yPropose[iTimeslot, iStudent] = -1
-                elif len(clones) == 1:
-                    yPropose[iTimeslot, iStudent] = clones[0]
-                else:
-                    pickFaculty = np.random.choice(clones)
-                    xPropose[iTimeslot, clones] = -1
-                    xPropose[iTimeslot, pickFaculty] = iStudent
-                    yPropose[iTimeslot, iStudent] = pickFaculty
+            # --------------- eliminate student double bookings ("clones") and generate student schedules
+            for iStudent in range(numStudents):
+                for jTimeslot in range(numTimeslots):
+                    clones = list(np.nonzero(xPropose[jTimeslot, :] == iStudent))[0]
+                    if len(clones) == 0:
+                        yPropose[jTimeslot, iStudent] = -1
+                    elif len(clones) == 1:
+                        yPropose[jTimeslot, iStudent] = clones[0]
+                    else:
+                        pickFaculty = np.random.choice(clones)
+                        xPropose[jTimeslot, clones] = -1
+                        xPropose[jTimeslot, pickFaculty] = iStudent
+                        yPropose[jTimeslot, iStudent] = pickFaculty
 
-        # --------------- hard constraints (besides no clones)
-        # Nothing here yet!
-
-        # --------------- Impose other special accomodations
-        # Nothing here yet!
+            # --------------- Impose hard constraints (besides no clones)
+            # --------------- Impose other special accomodations
+            # Nothing here yet!
+            hardConstraintSatisfied = 1
 
         # --------------- Compute targets
 
         # TARGET: Asterisk students get requested faculty
         proposalTargets.FractionOfAsteriskRequestSatisfied["min"] = 1
-        proposalTargets.FractionOfAsteriskRequestSatisfied["total"] = 0
+        fractionOfAsteriskRequestSatisfied_total = 0
         for iiStudent in range(numAsterisks):
             iStudent = studentAsteriskList[iiStudent]
             fractionOfAsteriskRequestSatisfied = len(set(np.where(boolStudentRequests[iStudent, :] == 1)[0]) & set(
                 yPropose[:, iStudent])) / float(np.count_nonzero(boolStudentRequests[iStudent, :] == 1))
-            proposalTargets.FractionOfAsteriskRequestSatisfied["total"] = proposalTargets.FractionOfAsteriskRequestSatisfied["total"] + \
-                fractionOfAsteriskRequestSatisfied
+            fractionOfAsteriskRequestSatisfied_total = fractionOfAsteriskRequestSatisfied_total + fractionOfAsteriskRequestSatisfied
             if proposalTargets.FractionOfAsteriskRequestSatisfied["min"] > fractionOfAsteriskRequestSatisfied:
                 proposalTargets.FractionOfAsteriskRequestSatisfied["min"] = fractionOfAsteriskRequestSatisfied
+        proposalTargets.FractionOfAsteriskRequestSatisfied["mean"] = fractionOfAsteriskRequestSatisfied_total/float(numAsterisks)
+
 
         # TARGET: Asterisk students get full schedules
         fractionAsteriskFull = sum(yPropose[:, studentAsteriskList] != -1) / float(numTimeslots)
         proposalTargets.FractionAsteriskFull["min"] = min(fractionAsteriskFull)
-        proposalTargets.FractionAsteriskFull["total"] = sum(fractionAsteriskFull)
+        proposalTargets.FractionAsteriskFull["mean"] = sum(fractionAsteriskFull) / float(numAsterisks)
 
         # TARGET: All students get requested faculty
         proposalTargets.FractionOfRequestSatisfied["min"] = 1
-        proposalTargets.FractionOfRequestSatisfied["total"] = 0
+        fractionOfRequestSatisfied_total = 0
         for iStudent in range(numStudents):
             if np.count_nonzero(boolStudentRequests[iStudent, :] == 1) > 0:
                 fractionOfRequestSatisfied = len(set(np.where(boolStudentRequests[iStudent, :] == 1)[0]) & set(
                     yPropose[:, iStudent])) / float(np.count_nonzero(boolStudentRequests[iStudent, :] == 1))
             else:
                 fractionOfRequestSatisfied = 1
-            proposalTargets.FractionOfRequestSatisfied["total"] = proposalTargets.FractionOfRequestSatisfied["total"] + fractionOfRequestSatisfied
+            fractionOfRequestSatisfied_total = fractionOfRequestSatisfied_total + fractionOfRequestSatisfied
             if proposalTargets.FractionOfRequestSatisfied["min"] > fractionOfRequestSatisfied:
                 proposalTargets.FractionOfRequestSatisfied["min"] = fractionOfRequestSatisfied
+        proposalTargets.FractionOfRequestSatisfied["mean"] = fractionOfRequestSatisfied_total/float(numStudents)
 
         # TARGET: All students get full schedules
         # np.delete(yPropose,jStudent,1) # TODO Modify to account for students without full schedules.
         yProposeFulltime = yPropose
         fractionFull = sum(yProposeFulltime != -1) / float(numTimeslots)
-        proposalTargets.FractionFull["total"] = sum(fractionFull)
+        proposalTargets.FractionFull["mean"] = sum(fractionFull)/float(numStudents)
         proposalTargets.FractionFull["min"] = min(fractionFull)
 
         # TARGET: Student should meet at least a set number of faculty
@@ -229,11 +236,10 @@ def makeSchedule(directoryName):
         proposalTargets.numberTimezoneViolations = 0
 
         # TARGET: Gendered students meet women faculty
-        proposalTargets.numMeetingWomen = 0
+        numMeetingWomen = 0
         for iiStudent in range(numGenderedStudents):
-            proposalTargets.numMeetingWomen += any(set(yPropose[:,
-                                                studentGenderedList[iiStudent]]) & facultyWomenSet)
-        proposalTargets.fractionGenderedMeeting = proposalTargets.numMeetingWomen / float(numGenderedStudents)
+            numMeetingWomen += any(set(yPropose[:,studentGenderedList[iiStudent]]) & facultyWomenSet)
+        proposalTargets.fractionGenderedMeeting = numMeetingWomen / float(numGenderedStudents)
 
         # TARGET: Make sure no faculty gets more than 9 students
         proposalTargets.facultyMeetingTooManyStudents = 0
@@ -249,13 +255,13 @@ def makeSchedule(directoryName):
                               - proposalTargets.facultyMeetingTooManyStudents
                               - proposalTargets.numStudentsCriticallyLow
             + alpha['AsteriskRequests'] * (10*proposalTargets.FractionOfAsteriskRequestSatisfied["min"]
-                                            + proposalTargets.FractionOfAsteriskRequestSatisfied["total"] / float(numAsterisks))
+                                            + proposalTargets.FractionOfAsteriskRequestSatisfied["mean"] )
             + alpha['AsteriskFullness'] * (10*proposalTargets.FractionAsteriskFull["min"]
-                                            + proposalTargets.FractionAsteriskFull["total"] / float(numAsterisks))
+                                            + proposalTargets.FractionAsteriskFull["mean"] )
             + alpha['Fullness'] * (10*proposalTargets.FractionFull["min"]
-                                    + proposalTargets.FractionFull["total"] / float(numStudents))
+                                    + proposalTargets.FractionFull["mean"] )
             + alpha['Requests'] * (10*proposalTargets.FractionOfRequestSatisfied["min"]
-                                    + proposalTargets.FractionOfRequestSatisfied["total"] / float(numStudents))
+                                    + proposalTargets.FractionOfRequestSatisfied["mean"] )
         )
 
         # Boltzmann test
@@ -351,25 +357,36 @@ def makeSchedule(directoryName):
         writer.save()
 
     # ---------------- REPORTING - HOW'D WE DO? -----------------------------
+
+    for i, iTarget in enumerate(vars(minTargets).items(),start=1):
+
+        if isinstance(iTarget[1],dict): # if it's a target with a min and a mean
+            print('%s = on average %3.0f%%, at worst %3.0f%%' % (iTarget[0], 100*getattr(minTargets,iTarget[0])['mean'], 100*getattr(minTargets,iTarget[0])['min']))
+        else:
+            print('%s = %3.2f' % (iTarget[0], getattr(minTargets,iTarget[0])))
+
+
     # ---------------- VISUALIZE ANNEALING ----------------------------------
     if visualize:
         fig = plt.figure(figsize=(18, 16))
 
         numberOfPlots = len(vars(proposalTargets))
 
+        ntToPlot = range(ntmax)
+
         for i, iTarget in enumerate(vars(proposalTargets).items(),start=1):
 
             if isinstance(iTarget[1],dict): # if it's a target with a min and a mean
                 ax = fig.add_subplot(numberOfPlots, 1, i)
-                ax.set_ylabel(iTarget[0])
-                for nt in range(ntmax):
-                    plt.plot(nt,getattr(listOfTargets[nt],iTarget[0])['min'], '+b')
-                    plt.plot(nt,getattr(listOfTargets[nt],iTarget[0])['total'] / float(numStudents), 'or')
+                ax.title.set_text(iTarget[0])
+                for nt in ntToPlot[::100]:
+                    plt.plot(nt,getattr(listOfTargets[nt],iTarget[0])['min'], 'xr')
+                    plt.plot(nt,getattr(listOfTargets[nt],iTarget[0])['mean'], 'ob')
             else:
                 ax = fig.add_subplot(numberOfPlots, 1, i)
-                ax.set_ylabel(iTarget[0])
-                for nt in range(ntmax):
-                    plt.plot(nt,getattr(listOfTargets[nt],iTarget[0]), '+b')
+                ax.title.set_text(iTarget[0])
+                for nt in ntToPlot[::100]:
+                    plt.plot(nt,getattr(listOfTargets[nt],iTarget[0]), '+k')
 
         plt.show()
 
@@ -380,16 +397,16 @@ class Targets:
         self.fractionGenderedMeeting = 0
         self.facultyMeetingTooManyStudents = 0
         self.numStudentsCriticallyLow = 0
-        self.FractionAsteriskFull = {'min':0, 'total':0}
-        self.FractionOfAsteriskRequestSatisfied = {'min':0, 'total':0}
-        self.FractionFull= {'min':0, 'total':0}
-        self.FractionOfRequestSatisfied = {'min':0, 'total':0}
+        self.FractionAsteriskFull = {'min':0, 'mean':0}
+        self.FractionOfAsteriskRequestSatisfied = {'min':0, 'mean':0}
+        self.FractionFull= {'min':0, 'mean':0}
+        self.FractionOfRequestSatisfied = {'min':0, 'mean':0}
 
     def copy(self):
         targetCopy = Targets()
         for iTargetName, iTargetValue in vars(self).items():
             if isinstance(iTargetValue,dict):
-                setattr(targetCopy,iTargetName,{'min':iTargetValue['min'], 'total':iTargetValue['total']})
+                setattr(targetCopy,iTargetName,{'min':iTargetValue['min'], 'mean':iTargetValue['mean']})
             else:
                 setattr(targetCopy,iTargetName,iTargetValue)
         return targetCopy

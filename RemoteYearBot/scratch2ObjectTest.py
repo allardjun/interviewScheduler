@@ -31,8 +31,18 @@ def scratch2ObjectTest():
     for i, iTarget in enumerate(vars(currentTargets).items()):
         print(getattr(currentTargets,iTarget[0]))
 
-
-
+    for i, iTarget in enumerate(vars(proposalTargets).items(),start=1):
+        if isinstance(iTarget[1],dict): # if it's a target with a min and a mean
+            ax = fig.add_subplot(numberOfPlots, 1, i)
+            ax.title.set_text(iTarget[0])
+            for nt in ntToPlot[::100]:
+                plt.plot(nt,getattr(listOfTargets[nt],iTarget[0])['min'], '+b')
+                plt.plot(nt,getattr(listOfTargets[nt],iTarget[0])['mean'], 'or')
+        else:
+            ax = fig.add_subplot(numberOfPlots, 1, i)
+            ax.title.set_text(iTarget[0])
+            for nt in ntToPlot[::100]:
+                plt.plot(nt,getattr(listOfTargets[nt],iTarget[0]), '+k')
 
     print(len(vars(currentTargets)))
 
@@ -43,23 +53,23 @@ class Targets:
         self.fractionGenderedMeeting = 0
         self.facultyMeetingTooManyStudents = 0
         self.numStudentsCriticallyLow = 0
-        self.FractionAsteriskFull = {'min':0, 'total':0}
-        self.FractionOfAsteriskRequestSatisfied = {'min':0, 'total':0}
-        self.FractionFull= {'min':0, 'total':0}
-        self.FractionOfRequestSatisfied = {'min':0, 'total':0}
+        self.FractionAsteriskFull = {'min':0, 'mean':0}
+        self.FractionOfAsteriskRequestSatisfied = {'min':0, 'mean':0}
+        self.FractionFull= {'min':0, 'mean':0}
+        self.FractionOfRequestSatisfied = {'min':0, 'mean':0}
 
     def copy(self):
         targetCopy = Targets()
         for iTargetName, iTargetValue in vars(self).items():
             if isinstance(iTargetValue,dict):
-                setattr(targetCopy,iTargetName,{'min':iTargetValue['min'], 'total':iTargetValue['total']})
+                setattr(targetCopy,iTargetName,{'min':iTargetValue['min'], 'mean':iTargetValue['mean']})
             else:
                 setattr(targetCopy,iTargetName,iTargetValue)
         return targetCopy
 
 
         targetCopy.E = self.E
-        targetCopy.numberTimezoneViolations = self.numberTimezoneViolations
+        targetCopy.numberTimezoneViolations    = self.numberTimezoneViolations
         targetCopy.fractionGenderedMeeting = self.fractionGenderedMeeting
         targetCopy.facultyMeetingTooManyStudents = self.facultyMeetingTooManyStudents
         targetCopy.numStudentsCriticallyLow = self.numStudentsCriticallyLow
