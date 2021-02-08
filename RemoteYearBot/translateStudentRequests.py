@@ -2,7 +2,7 @@ def translateStudentRequests(directoryName):
 
     import pandas as pd
 
-    from fuzzywuzzy import fuzz
+    from fuzzywuzzy import fuzz #this is used in fuzzy line comparison to fix typos in names
     from fuzzywuzzy import process
 
     # Read in student requests in comma-separated list form
