@@ -46,7 +46,7 @@ def makeSchedule(directoryName):
     if visualize:
         listOfTargets = []
 
-    ntmax = int(2e3) # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
+    ntmax = int(2e4) # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
 
     # relative importances of the targets
     alpha = {
@@ -137,7 +137,6 @@ def makeSchedule(directoryName):
                 slotsForThisStudent = slotsForThisStudent | set(slotsInDay[day])
         slotsForThisStudent = slotsForThisStudent & set(slotsInTimezone[timezone[iStudent]])
         slotsForStudent.append(list(slotsForThisStudent))
-        print(slotsForStudent[iStudent])
 
     # --------------- Special accommodations setup
     # blank for now!
