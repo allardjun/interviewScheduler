@@ -42,11 +42,16 @@ def makeSchedule(directoryName):
 
     # ---------------- OPTIONS AND PARAMETERS -------------------------------
 
-    visualize = 1  # whether or not to create graphic showing simulated annealing
+    # uncomment for repeatable runs
+    mySeed = np.random.randint(40)
+    np.random.seed(mySeed)
+    print("mySeed=" + str(mySeed))
+
+    visualize = 0  # whether or not to create graphic showing simulated annealing
     if visualize:
         listOfTargets = []
 
-    ntmax = int(2e4) # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
+    ntmax = int(1e4) # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
 
     # relative importances of the targets
     alpha = {
@@ -65,15 +70,15 @@ def makeSchedule(directoryName):
     # timezones
     slotsInTimezone = {
         'EST':(0,1,2,3,10,11,12,13,24,25,26,27),
-        'PST':(4,5,6,7,14,15,16,17,28,29,30,31),
+        'PST':(2,3,4,5,6,7,14,15,16,17,28,29,30,31),
         'AP':(8,9,18,19),
         'India':(20,21,22,23)
     }
     # day
     slotsInDay = {
-        'Wed':range(0,9),
-        'Thu':range(10,23),
-        'Fri':range(24,31)
+        'Wed':range(0,9+1),
+        'Thu':range(10,23+1),
+        'Fri':range(24,31+1)
     }
 
     # Temperature function aka Annealing function.
@@ -129,10 +134,13 @@ def makeSchedule(directoryName):
 
     timezone = dfStudentAttributes['Timezone']
 
+
     slotsForStudent = []
     for iStudent in range(numStudents):
         slotsForThisStudent = set()
         for day in ('Wed','Thu','Fri'):
+            #print(iStudent)
+            #print(day)
             if dfStudentAttributes.iloc[iStudent].loc[day]==1:
                 slotsForThisStudent = slotsForThisStudent | set(slotsInDay[day])
         slotsForThisStudent = slotsForThisStudent & set(slotsInTimezone[timezone[iStudent]])
@@ -429,5 +437,5 @@ class Targets:
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = 'SampleData_RealAnon2020'  # EDIT FOLDERNAME HERE
+    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2021Entry/03RecruitmentVisit/1745/04'  # EDIT FOLDERNAME HERE
     makeSchedule(FOLDERNAME)
