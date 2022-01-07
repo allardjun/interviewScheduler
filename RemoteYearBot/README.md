@@ -6,7 +6,7 @@
 ### Installation
 
 Requires python and the following python packages:
-`` numpy, xlsxwriter, sys, matplotlib, pandas, fuzzywuzzy ``
+`` numpy, xlsxwriter, sys, matplotlib, pandas, fuzzywuzzy, Levenshtein, openpyxl``
 
 ### Input data
 
@@ -30,7 +30,7 @@ Requires two xlsx spreadsheets located in a folder (anywhere on machine)
 To run,
 1. Edit the FOLDERNAME near bottom of translateStudentRequests.py.
 2. Run ```python translateStudentRequests.py```.  This should create forBot_StudentRequestMatrix.xlsx. It will also write to the terminal a list of faculty names who were requested but are not in the availability schedule.
-3. Run ``python schedulerBot.py``
+3. Run ``python makeSchedule.py``
 
 4. This will create 4 xlsx spreadsheets:
  - fromBot_FacultySchedules.xlsx
