@@ -47,7 +47,7 @@ def makeSchedule(directoryName):
     np.random.seed(mySeed)
     print("mySeed=" + str(mySeed))
 
-    visualize = 0  # whether or not to create graphic showing simulated annealing
+    visualize = 1  # whether or not to create graphic showing simulated annealing
     if visualize:
         listOfTargets = []
 
@@ -437,5 +437,5 @@ class Targets:
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2021Entry/03RecruitmentVisit/1745/04'  # EDIT FOLDERNAME HERE
+    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/Test_DataFrom2021'  # EDIT FOLDERNAME HERE
     makeSchedule(FOLDERNAME)
