@@ -34,6 +34,7 @@ def makeSchedule(directoryName):
     # Before using, you need to pip install all of these.
     import xlsxwriter
     import sys
+    import os
     import numpy as np
     import pandas as pd
     import matplotlib.pyplot as plt
@@ -43,7 +44,12 @@ def makeSchedule(directoryName):
     # ---------------- OPTIONS AND PARAMETERS -------------------------------
 
     # uncomment for repeatable runs
-    mySeed = np.random.randint(40)
+    if len(sys.argv)>1:
+        mySeed = int(sys.argv[1])
+        subdirectoryName = '/' + sys.argv[1]
+        os.system("mkdir " + directoryName + subdirectoryName)
+    else:
+        mySeed = np.random.randint(40)
     np.random.seed(mySeed)
     print("mySeed=" + str(mySeed))
 
@@ -60,7 +66,9 @@ def makeSchedule(directoryName):
         'Fullness': 2**2,
         'Requests': 2**4,
         'AsteriskFullness': 0,
-        'AsteriskRequests': 2**7
+        'AsteriskRequests': 2**7,
+        'FacultyFullness' : 2**7,
+        'StudentsCriticallyLow': 2**7
     }
 
     tooManyStudentsToAFaculty = 8  # try to make sure each faculty meets no more than this many students
@@ -278,18 +286,18 @@ def makeSchedule(directoryName):
         proposalTargets.fractionGenderedMeeting = numMeetingWomen / float(numGenderedStudents)
 
         # TARGET: Make sure no faculty gets more than 9 students
-        proposalTargets.facultyMeetingTooManyStudents = 0
+        proposalTargets.facultyExcessMeetings = 0
         for iFaculty in range(numFaculty):
             numMeetings = numTimeslots - sum(xPropose[:, iFaculty] == -1)
             if numMeetings > maxNumberOfMeetings[iFaculty]:#tooManyStudentsToAFaculty:
-                proposalTargets.facultyMeetingTooManyStudents += 1
+                proposalTargets.facultyExcessMeetings += numMeetings - maxNumberOfMeetings[iFaculty]
 
         # --------------- Boltzmann test
         EPropose = - (
             alpha['Timezone'] * proposalTargets.numberTimezoneViolations
             + alpha['Gender'] * proposalTargets.fractionGenderedMeeting
-                              - proposalTargets.facultyMeetingTooManyStudents
-                              - proposalTargets.numStudentsCriticallyLow
+            - alpha['FacultyFullness'] * proposalTargets.facultyExcessMeetings
+            - alpha['StudentsCriticallyLow'] * proposalTargets.numStudentsCriticallyLow
             + alpha['AsteriskRequests'] * (10*proposalTargets.FractionOfAsteriskRequestSatisfied["min"]
                                             + proposalTargets.FractionOfAsteriskRequestSatisfied["mean"] )
             + alpha['AsteriskFullness'] * (10*proposalTargets.FractionAsteriskFull["min"]
@@ -338,7 +346,7 @@ def makeSchedule(directoryName):
                 else:
                     xNames[iTimeslot, iFaculty] = studentNames[int(x[iTimeslot, iFaculty])]
         pd.DataFrame(data=xNames, index=timeslotNames, columns=facultyNames).to_excel(
-            directoryName + '/fromBot_FacultySchedules.xlsx')
+            directoryName + subdirectoryName + '/fromBot_FacultySchedules.xlsx')
 
         # output student schedules with names
         yNames = np.empty((numTimeslots, numStudents), dtype='object')
@@ -349,11 +357,11 @@ def makeSchedule(directoryName):
                 else:
                     yNames[iTimeslot, iStudent] = facultyNames[int(y[iTimeslot, iStudent])]
         pd.DataFrame(data=yNames, index=timeslotNames, columns=studentNames).to_excel(
-            directoryName + '/fromBot_StudentSchedules.xlsx')
+            directoryName + subdirectoryName + '/fromBot_StudentSchedules.xlsx')
 
     if 1:
         # --------------- Different sheets -----------------------
-        writer = pd.ExcelWriter(directoryName + '/fromBot_FacultySchedules_1SheetEach.xlsx', engine='xlsxwriter')
+        writer = pd.ExcelWriter(directoryName + subdirectoryName + '/fromBot_FacultySchedules_1SheetEach.xlsx', engine='xlsxwriter')
         # output faculty schedules with names
         for iFaculty in range(numFaculty):
             xNames = np.empty((numTimeslots, 1), dtype='object')
@@ -375,7 +383,7 @@ def makeSchedule(directoryName):
                 writer.sheets[sheetName].set_column('B:B', 30)
         writer.save()
 
-        writer = pd.ExcelWriter(directoryName + '/fromBot_StudentSchedules_1SheetEach.xlsx', engine='xlsxwriter')
+        writer = pd.ExcelWriter(directoryName + subdirectoryName + '/fromBot_StudentSchedules_1SheetEach.xlsx', engine='xlsxwriter')
         # output student schedules with names
         for iStudent in range(numStudents):
             yNames = np.empty((numTimeslots, 2), dtype='object')
@@ -431,7 +439,7 @@ class Targets:
         self.E = 0
         self.numberTimezoneViolations = 0
         self.fractionGenderedMeeting = 0
-        self.facultyMeetingTooManyStudents = 0
+        self.facultyExcessMeetings = 0
         self.numStudentsCriticallyLow = 0
         self.FractionAsteriskFull = {'min':0, 'mean':0}
         self.FractionOfAsteriskRequestSatisfied = {'min':0, 'mean':0}
