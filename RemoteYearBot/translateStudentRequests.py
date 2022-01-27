@@ -8,6 +8,9 @@ def translateStudentRequests(directoryName):
     # Read in student requests in comma-separated list form
     x1 = pd.read_excel(directoryName + '/forBot_StudentRequestList.xlsx')
 
+    x1['Faculty names'] = x1['Faculty requests']
+
+    print(x1['Faculty names'])
 
     # Read in core faculty list
     xFaculty = pd.read_excel(directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx')
@@ -23,16 +26,16 @@ def translateStudentRequests(directoryName):
     #studentNames = x1['Last name'] + ', ' + x1['First name']
     studentNames = x1['Student name']
 
-    studentChoices_Clean = pd.DataFrame(index=studentNames, columns=['wngbngd', 'asterisk', 'Faculty names'])
+    studentChoices_Clean = pd.DataFrame(index=studentNames, columns=['wngbngd', 'asterisk', 'Faculty requests', 'Faculty suggestions', 'Faculty names'])
 
     for iStudent in range(len(x1)):
 
-        #thisStudentChoices = x1.iloc[iStudent]['Faculty names'].replace('\xa0', '').replace(', and ', ', ').replace(' and ', ', ').split(',')
-        #print(x1.iloc[iStudent]['Faculty names'])
+        print(x1.iloc[iStudent]['Faculty names'])
         if not isinstance(x1.iloc[iStudent]['Faculty names'],float):
-            thisStudentChoices = x1.iloc[iStudent]['Faculty names'].split(',')
+            thisStudentChoices = x1.iloc[iStudent]['Faculty names'].replace('\xa0', '').replace(', and ', ', ').replace(' and ', ', ').replace('Dr.', '').replace('Dr. ', '').replace('Professor ', '').replace('Prof.', '').replace('Prof. ', '').replace('.', '').split(',')
         else:
             thisStudentChoices = ["Nobody"]
+        print(thisStudentChoices)
 
         thisStudentChoices_Clean = list()
         for iFacultyName in range(len(thisStudentChoices)):
@@ -69,11 +72,12 @@ def translateStudentRequests(directoryName):
 
 
     print("Let's bug these faculty:")
+    #print(missingFacultyList)
     missingFacultyListSorted = sorted(missingFacultyList, key=lambda x: x.split(" ")[-1])
-    print(map(lambda a: str(a), missingFacultyListSorted))
+    print(*missingFacultyListSorted, sep="\n")
 
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/Test_DataFrom2021' # EDIT FOLDERNAME HERE
+    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/Test_DataFrom2022' # EDIT FOLDERNAME HERE
     translateStudentRequests(FOLDERNAME)

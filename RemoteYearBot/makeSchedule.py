@@ -51,7 +51,7 @@ def makeSchedule(directoryName):
     if visualize:
         listOfTargets = []
 
-    ntmax = int(1e4) # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
+    ntmax = int(4e4) # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
 
     # relative importances of the targets
     alpha = {
@@ -63,22 +63,21 @@ def makeSchedule(directoryName):
         'AsteriskRequests': 2**7
     }
 
-    tooManyStudentsToAFaculty = 9  # try to make sure each faculty meets no more than this many students
+    tooManyStudentsToAFaculty = 8  # try to make sure each faculty meets no more than this many students
     criticalNumberOfInterviews = 5  # try to make sure each students meets at least this many faculty
 
 
     # timezones
     slotsInTimezone = {
-        'EST':(0,1,2,3,10,11,12,13,24,25,26,27),
-        'PST':(2,3,4,5,6,7,14,15,16,17,28,29,30,31),
-        'AP':(8,9,18,19),
-        'India':(20,21,22,23)
+        'EST':(0,1,2,3,10,11,12,13),
+        'PST':(2,3,4,5,6,7,12,13,14,15,16),
+        'AP':(7,8,9,17,18,19),
+        'India':()
     }
     # day
     slotsInDay = {
-        'Wed':range(0,9+1),
-        'Thu':range(10,23+1),
-        'Fri':range(24,31+1)
+        'Mon':range(0,9),
+        'Tue':range(10,19),
     }
 
     # Temperature function aka Annealing function.
@@ -93,9 +92,19 @@ def makeSchedule(directoryName):
     dfFacultyAvailability = pd.read_excel(
         directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx', index_col=0).fillna(0)
 
-    dfFacultyAttributes = dfFacultyAvailability.head(2).transpose()
+    dfFacultySurvey = pd.read_excel(directoryName + '/forBot_FacultySurvey.xlsx', index_col=0).fillna(0)
 
-    dfFacultyAvailability.drop(dfFacultyAvailability.head(2).index, inplace=True)
+    dfFacultyAttributes = dfFacultySurvey[['Name','W','Max number of students']].reset_index()
+    facultyList = list(dfFacultyAttributes['Name'])
+  
+    facultyLastNames = []
+    for iFaculty in range(len(facultyList)):
+        facultyLastNames.append(facultyList[iFaculty].split(' ')[-1])
+    dfFacultyAttributes['Last name'] = facultyLastNames
+    dfFacultyAttributes.sort_values(by=['Last name'], inplace=True)
+    #print(dfFacultyAttributes)
+
+    #dfFacultyAvailability.drop(dfFacultyAvailability.head(2).index, inplace=True)
     boolFacultyAvailability = np.nan_to_num(dfFacultyAvailability.to_numpy())
 
     facultyNames = list(dfFacultyAvailability.columns)
@@ -104,6 +113,9 @@ def makeSchedule(directoryName):
     boolWomenFaculty = list(dfFacultyAttributes["W"] == 1)
     facultyWomenList = np.nonzero(boolWomenFaculty)[0]
     facultyWomenSet = set(facultyWomenList)
+
+    maxNumberOfMeetings = list(dfFacultyAttributes['Max number of students'])
+    maxNumberOfMeetings[:] = [tooManyStudentsToAFaculty if (x==0 or x>tooManyStudentsToAFaculty) else x for x in maxNumberOfMeetings]
 
     timeslotNames = dfFacultyAvailability.index
     numTimeslots = len(timeslotNames)
@@ -138,11 +150,12 @@ def makeSchedule(directoryName):
     slotsForStudent = []
     for iStudent in range(numStudents):
         slotsForThisStudent = set()
-        for day in ('Wed','Thu','Fri'):
+        for day in ('Mon','Tue'):
             #print(iStudent)
             #print(day)
-            if dfStudentAttributes.iloc[iStudent].loc[day]==1:
-                slotsForThisStudent = slotsForThisStudent | set(slotsInDay[day])
+            #if dfStudentAttributes.iloc[iStudent].loc[day]==1:
+            #    slotsForThisStudent = slotsForThisStudent | set(slotsInDay[day])
+            slotsForThisStudent = slotsForThisStudent | set(slotsInDay[day]) # just use this line if everyone is here for both days. Otherwise use the two lines above.
         slotsForThisStudent = slotsForThisStudent & set(slotsInTimezone[timezone[iStudent]])
         slotsForStudent.append(list(slotsForThisStudent))
 
@@ -218,7 +231,7 @@ def makeSchedule(directoryName):
         for iiStudent in range(numAsterisks):
             iStudent = studentAsteriskList[iiStudent]
             fractionOfAsteriskRequestSatisfied = len(set(np.where(boolStudentRequests[iStudent, :] == 1)[0]) & set(
-                yPropose[:, iStudent])) / float(np.count_nonzero(boolStudentRequests[iStudent, :] == 1))
+                yPropose[:, iStudent])) / float(np.count_nonzero(boolStudentRequests[iStudent, :] == 1)+0.01)
             fractionOfAsteriskRequestSatisfied_total = fractionOfAsteriskRequestSatisfied_total + fractionOfAsteriskRequestSatisfied
             if proposalTargets.FractionOfAsteriskRequestSatisfied["min"] > fractionOfAsteriskRequestSatisfied:
                 proposalTargets.FractionOfAsteriskRequestSatisfied["min"] = fractionOfAsteriskRequestSatisfied
@@ -268,7 +281,7 @@ def makeSchedule(directoryName):
         proposalTargets.facultyMeetingTooManyStudents = 0
         for iFaculty in range(numFaculty):
             numMeetings = numTimeslots - sum(xPropose[:, iFaculty] == -1)
-            if numMeetings > tooManyStudentsToAFaculty:
+            if numMeetings > maxNumberOfMeetings[iFaculty]:#tooManyStudentsToAFaculty:
                 proposalTargets.facultyMeetingTooManyStudents += 1
 
         # --------------- Boltzmann test
@@ -437,5 +450,5 @@ class Targets:
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/Test_DataFrom2021'  # EDIT FOLDERNAME HERE
+    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/Test_DataFrom2022'  # EDIT FOLDERNAME HERE
     makeSchedule(FOLDERNAME)
