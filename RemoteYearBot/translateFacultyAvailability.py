@@ -83,5 +83,5 @@ def translateFacultyAvailability(directoryName):
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/Test_DataFrom2022' # EDIT FOLDERNAME HERE
+    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/2022RealData_01271039' # EDIT FOLDERNAME HERE
     translateFacultyAvailability(FOLDERNAME)

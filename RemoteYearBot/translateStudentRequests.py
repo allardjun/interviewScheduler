@@ -10,6 +10,10 @@ def translateStudentRequests(directoryName):
 
     x1['Faculty names'] = x1['Faculty requests']
 
+    for iStudent in x1.index:
+        x1['Faculty names'][iStudent] = str(x1['Faculty requests'][iStudent])  + str(x1['Faculty suggestions'][iStudent]) 
+    #x1['Faculty names'] = x1['Faculty requests'] #+ x1['Faculty suggestions']
+
     print(x1['Faculty names'])
 
     # Read in core faculty list
@@ -79,5 +83,5 @@ def translateStudentRequests(directoryName):
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/Test_DataFrom2022' # EDIT FOLDERNAME HERE
+    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/2022RealData_01271039' # EDIT FOLDERNAME HERE
     translateStudentRequests(FOLDERNAME)

@@ -50,6 +50,7 @@ def makeSchedule(directoryName):
         os.system("mkdir " + directoryName + subdirectoryName)
     else:
         mySeed = np.random.randint(40)
+        subdirectoryName = ''
     np.random.seed(mySeed)
     print("mySeed=" + str(mySeed))
 
@@ -63,7 +64,7 @@ def makeSchedule(directoryName):
     alpha = {
         'Timezone': 2**5,
         'Gender': 2**5,
-        'Fullness': 2**2,
+        'Fullness': 2**-1,
         'Requests': 2**4,
         'AsteriskFullness': 0,
         'AsteriskRequests': 2**7,
@@ -71,16 +72,16 @@ def makeSchedule(directoryName):
         'StudentsCriticallyLow': 2**7
     }
 
-    tooManyStudentsToAFaculty = 8  # try to make sure each faculty meets no more than this many students
+    tooManyStudentsToAFaculty = 6  # try to make sure each faculty meets no more than this many students
     criticalNumberOfInterviews = 5  # try to make sure each students meets at least this many faculty
 
 
     # timezones
     slotsInTimezone = {
         'EST':(0,1,2,3,10,11,12,13),
-        'PST':(2,3,4,5,6,7,12,13,14,15,16),
-        'AP':(7,8,9,17,18,19),
-        'India':()
+        'PST':(2,3,4,5,6,7,12,13,14,15,16,17), # survey says to ignore the last few slots
+        'AP':(6,7,8,9,16,17),
+        'India':(2,3,4,5,6,7,12,13,14,15,16,17)
     }
     # day
     slotsInDay = {
@@ -100,7 +101,7 @@ def makeSchedule(directoryName):
     dfFacultyAvailability = pd.read_excel(
         directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx', index_col=0).fillna(0)
 
-    dfFacultySurvey = pd.read_excel(directoryName + '/forBot_FacultySurvey.xlsx', index_col=0).fillna(0)
+    dfFacultySurvey = pd.read_excel(directoryName + '/forBot_FacultyAvailabilitySurvey.xlsx', index_col=0).fillna(0)
 
     dfFacultyAttributes = dfFacultySurvey[['Name','W','Max number of students']].reset_index()
     facultyList = list(dfFacultyAttributes['Name'])
@@ -126,6 +127,10 @@ def makeSchedule(directoryName):
     maxNumberOfMeetings[:] = [tooManyStudentsToAFaculty if (x==0 or x>tooManyStudentsToAFaculty) else x for x in maxNumberOfMeetings]
 
     timeslotNames = dfFacultyAvailability.index
+    # Make nicer timeslot names from another excel file.
+    dfTimeslotNames = pd.read_excel(
+        directoryName + '/forBot_timeslotNames.xlsx').fillna(0)
+    timeslotNames = dfTimeslotNames['Timeslot name']
     numTimeslots = len(timeslotNames)
 
     # --------------- Get student requests
@@ -458,5 +463,5 @@ class Targets:
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/Test_DataFrom2022'  # EDIT FOLDERNAME HERE
+    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/2022RealData_01271039'  # EDIT FOLDERNAME HERE
     makeSchedule(FOLDERNAME)

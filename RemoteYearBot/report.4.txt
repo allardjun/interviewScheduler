@@ -1,0 +1,11 @@
+mySeed=4
+E = 1519.01
+numberTimezoneViolations = 0.00
+fractionGenderedMeeting = 1.00
+facultyExcessMeetings = 0.00
+numStudentsCriticallyLow = 13.00
+FractionAsteriskFull = on average  40%, at worst  35%
+FractionOfAsteriskRequestSatisfied = on average  75%, at worst   0%
+FractionFull = on average  30%, at worst  10%
+FractionOfRequestSatisfied = on average  79%, at worst   0%
+mySeed=4
