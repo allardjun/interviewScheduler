@@ -13,6 +13,8 @@ def translateFacultyAvailability(directoryName):
     facultyList_df = x1[['Name','W','Max number of students']]
     facultyList = facultyList_df['Name']
     #print(facutlyList_df)
+    for iFaculty in range(len(facultyList)):
+        facultyList[iFaculty] = facultyList[iFaculty].lstrip().rstrip()
 
     print(facultyList) # note these are e-mails right now. Need to manually change to names.
 
@@ -50,10 +52,13 @@ def translateFacultyAvailability(directoryName):
     availabilityMatrix = np.zeros((len(slots), len(facultyList)))
     for iFaculty in range(len(x1)):
         for iBigSlot in range(len(bigSlots)):
-            if bigSlots[iBigSlot] in stringOfAvailableBigSlots[iFaculty].split(';'):
+            if bigSlots[iBigSlot] in stringOfAvailableBigSlots[iFaculty].lstrip().split(';'):
                 availabilityMatrix[2*iBigSlot+0,iFaculty] = 1
                 availabilityMatrix[2*iBigSlot+1,iFaculty] = 1
-    
+        # print(facultyList[iFaculty])
+        # print(availabilityMatrix[:,iFaculty])
+        # print(stringOfAvailableBigSlots[iFaculty])
+
     print(availabilityMatrix)
 
     # make dataframe for export
@@ -69,6 +74,8 @@ def translateFacultyAvailability(directoryName):
     availabilityMatrixDataFrame.sort_index(axis=1, inplace=True) 
     facultyList_sorted = sorted(facultyList, key=lambda x: x.split(" ")[-1])
     availabilityMatrixDataFrame.columns = facultyList_sorted
+    print(facultyList_LastNameFirst)
+
 
     # facultyLastNames = []
     # for iFaculty in range(len(facultyList)):
@@ -83,5 +90,5 @@ def translateFacultyAvailability(directoryName):
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/2022RealData_01271039' # EDIT FOLDERNAME HERE
+    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/2022RealData_01290600' # EDIT FOLDERNAME HERE
     translateFacultyAvailability(FOLDERNAME)

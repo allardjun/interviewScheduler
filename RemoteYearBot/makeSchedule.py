@@ -52,7 +52,7 @@ def makeSchedule(directoryName):
         mySeed = np.random.randint(40)
         subdirectoryName = ''
     np.random.seed(mySeed)
-    print("mySeed=" + str(mySeed))
+    print("schedule code (\"mySeed\"): " + str(mySeed))
 
     visualize = 1  # whether or not to create graphic showing simulated annealing
     if visualize:
@@ -64,16 +64,16 @@ def makeSchedule(directoryName):
     alpha = {
         'Timezone': 2**5,
         'Gender': 2**5,
-        'Fullness': 2**-1,
-        'Requests': 2**4,
+        'Fullness': 2**4,
+        'Requests': 2**6,
         'AsteriskFullness': 0,
         'AsteriskRequests': 2**7,
         'FacultyFullness' : 2**7,
-        'StudentsCriticallyLow': 2**7
+        'StudentsCriticallyLow': 2**6
     }
 
-    tooManyStudentsToAFaculty = 6  # try to make sure each faculty meets no more than this many students
-    criticalNumberOfInterviews = 5  # try to make sure each students meets at least this many faculty
+    tooManyStudentsToAFaculty = 5  # try to make sure each faculty meets no more than this many students
+    criticalNumberOfInterviews = 4  # try to make sure each students meets at least this many faculty
 
 
     # timezones
@@ -105,7 +105,9 @@ def makeSchedule(directoryName):
 
     dfFacultyAttributes = dfFacultySurvey[['Name','W','Max number of students']].reset_index()
     facultyList = list(dfFacultyAttributes['Name'])
-  
+    for iFaculty in range(len(facultyList)):
+        facultyList[iFaculty] = facultyList[iFaculty].lstrip().rstrip()
+
     facultyLastNames = []
     for iFaculty in range(len(facultyList)):
         facultyLastNames.append(facultyList[iFaculty].split(' ')[-1])
@@ -125,6 +127,8 @@ def makeSchedule(directoryName):
 
     maxNumberOfMeetings = list(dfFacultyAttributes['Max number of students'])
     maxNumberOfMeetings[:] = [tooManyStudentsToAFaculty if (x==0 or x>tooManyStudentsToAFaculty) else x for x in maxNumberOfMeetings]
+    #print(maxNumberOfMeetings)
+
 
     timeslotNames = dfFacultyAvailability.index
     # Make nicer timeslot names from another excel file.
@@ -257,18 +261,24 @@ def makeSchedule(directoryName):
         proposalTargets.FractionAsteriskFull["mean"] = sum(fractionAsteriskFull) / float(numAsterisks)
 
         # TARGET: All students get requested faculty
+        numStudentsNotMeetingAnyRequested = 0
         proposalTargets.FractionOfRequestSatisfied["min"] = 1
         fractionOfRequestSatisfied_total = 0
         for iStudent in range(numStudents):
             if np.count_nonzero(boolStudentRequests[iStudent, :] == 1) > 0:
                 fractionOfRequestSatisfied = len(set(np.where(boolStudentRequests[iStudent, :] == 1)[0]) & set(
                     yPropose[:, iStudent])) / float(np.count_nonzero(boolStudentRequests[iStudent, :] == 1))
+                if fractionOfRequestSatisfied == 0:
+                    numStudentsNotMeetingAnyRequested = numStudentsNotMeetingAnyRequested + 1 
+                    if nt==ntmax-1:
+                        print(studentNames[iStudent] + ' no requests satisfied')
             else:
                 fractionOfRequestSatisfied = 1
             fractionOfRequestSatisfied_total = fractionOfRequestSatisfied_total + fractionOfRequestSatisfied
             if proposalTargets.FractionOfRequestSatisfied["min"] > fractionOfRequestSatisfied:
                 proposalTargets.FractionOfRequestSatisfied["min"] = fractionOfRequestSatisfied
         proposalTargets.FractionOfRequestSatisfied["mean"] = fractionOfRequestSatisfied_total/float(numStudents)
+        proposalTargets.numStudentsNotMeetingAnyRequested = numStudentsNotMeetingAnyRequested
 
         # TARGET: All students get full schedules
         # np.delete(yPropose,jStudent,1) # TODO Modify to account for students without full schedules.
@@ -290,7 +300,7 @@ def makeSchedule(directoryName):
             numMeetingWomen += any(set(yPropose[:,studentGenderedList[iiStudent]]) & facultyWomenSet)
         proposalTargets.fractionGenderedMeeting = numMeetingWomen / float(numGenderedStudents)
 
-        # TARGET: Make sure no faculty gets more than 9 students
+        # TARGET: Make sure no faculty gets more than desired number of students
         proposalTargets.facultyExcessMeetings = 0
         for iFaculty in range(numFaculty):
             numMeetings = numTimeslots - sum(xPropose[:, iFaculty] == -1)
@@ -450,6 +460,7 @@ class Targets:
         self.FractionOfAsteriskRequestSatisfied = {'min':0, 'mean':0}
         self.FractionFull= {'min':0, 'mean':0}
         self.FractionOfRequestSatisfied = {'min':0, 'mean':0}
+        self.numStudentsNotMeetingAnyRequested = 0
 
     def copy(self):
         targetCopy = Targets()
@@ -463,5 +474,5 @@ class Targets:
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/2022RealData_01271039'  # EDIT FOLDERNAME HERE
+    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/2022RealData_01290600'  # EDIT FOLDERNAME HERE
     makeSchedule(FOLDERNAME)
