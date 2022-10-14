@@ -2,19 +2,12 @@ def translateStudentRequests(directoryName):
 
     import pandas as pd
 
-    from fuzzywuzzy import fuzz #this is used in fuzzy line comparison to fix typos in names
+    from fuzzywuzzy import fuzz
     from fuzzywuzzy import process
 
     # Read in student requests in comma-separated list form
     x1 = pd.read_excel(directoryName + '/forBot_StudentRequestList.xlsx')
 
-    x1['Faculty names'] = x1['Faculty requests']
-
-    for iStudent in x1.index:
-        x1['Faculty names'][iStudent] = str(x1['Faculty requests'][iStudent])#  + str(x1['Faculty suggestions'][iStudent]) 
-    #x1['Faculty names'] = x1['Faculty requests'] #+ x1['Faculty suggestions']
-
-    print(x1['Faculty names'])
 
     # Read in core faculty list
     xFaculty = pd.read_excel(directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx')
@@ -30,16 +23,16 @@ def translateStudentRequests(directoryName):
     #studentNames = x1['Last name'] + ', ' + x1['First name']
     studentNames = x1['Student name']
 
-    studentChoices_Clean = pd.DataFrame(index=studentNames, columns=['wngbngd', 'asterisk', 'Faculty requests', 'Faculty suggestions', 'Faculty names'])
+    studentChoices_Clean = pd.DataFrame(index=studentNames, columns=['wngbngd', 'asterisk', 'Faculty names'])
 
     for iStudent in range(len(x1)):
 
-        print(x1.iloc[iStudent]['Faculty names'])
+        #thisStudentChoices = x1.iloc[iStudent]['Faculty names'].replace('\xa0', '').replace(', and ', ', ').replace(' and ', ', ').split(',')
+        #print(x1.iloc[iStudent]['Faculty names'])
         if not isinstance(x1.iloc[iStudent]['Faculty names'],float):
-            thisStudentChoices = x1.iloc[iStudent]['Faculty names'].replace('\xa0', '').replace(', and ', ', ').replace(' and ', ', ').replace('Dr.', '').replace('Dr. ', '').replace('Professor ', '').replace('Prof.', '').replace('Prof. ', '').replace('.', '').split(',')
+            thisStudentChoices = x1.iloc[iStudent]['Faculty names'].split(',')
         else:
             thisStudentChoices = ["Nobody"]
-        print(thisStudentChoices)
 
         thisStudentChoices_Clean = list()
         for iFacultyName in range(len(thisStudentChoices)):
@@ -76,12 +69,11 @@ def translateStudentRequests(directoryName):
 
 
     print("Let's bug these faculty:")
-    #print(missingFacultyList)
     missingFacultyListSorted = sorted(missingFacultyList, key=lambda x: x.split(" ")[-1])
-    print(*missingFacultyListSorted, sep="\n")
+    print(map(lambda a: str(a), missingFacultyListSorted))
 
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/2022RealData_01290600' # EDIT FOLDERNAME HERE
+    FOLDERNAME = 'SampleData_RealAnon2020' # EDIT FOLDERNAME HERE
     translateStudentRequests(FOLDERNAME)
