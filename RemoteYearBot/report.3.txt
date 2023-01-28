@@ -1,11 +1,21 @@
-mySeed=3
-E = 1519.17
+schedule code ("mySeed"): 3
+Bai, Gali no requests satisfied
+Gao, Xiaoyue no requests satisfied
+Jakielski, Rachel no requests satisfied
+Li, Gaoyuan no requests satisfied
+Liu, Yimin no requests satisfied
+Lopez-Pena, Christian no requests satisfied
+Ma, Jiayan (Yoshii) no requests satisfied
+Thomas, Isaac no requests satisfied
+Zhao, Weihao (Roy) no requests satisfied
+Zheng, Xiao no requests satisfied
+E = 0.00
 numberTimezoneViolations = 0.00
 fractionGenderedMeeting = 1.00
 facultyExcessMeetings = 0.00
-numStudentsCriticallyLow = 13.00
-FractionAsteriskFull = on average  40%, at worst  35%
-FractionOfAsteriskRequestSatisfied = on average  75%, at worst   0%
-FractionFull = on average  30%, at worst  10%
-FractionOfRequestSatisfied = on average  76%, at worst   0%
-mySeed=3
+numStudentsCriticallyLow = 5.00
+FractionAsteriskFull = on average  29%, at worst  28%
+FractionOfAsteriskRequestSatisfied = on average  66%, at worst  50%
+FractionFull = on average  26%, at worst  11%
+FractionOfRequestSatisfied = on average  50%, at worst   0%
+numStudentsNotMeetingAnyRequested = 11.00

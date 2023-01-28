@@ -54,7 +54,7 @@ def makeSchedule(directoryName):
     np.random.seed(mySeed)
     print("schedule code (\"mySeed\"): " + str(mySeed))
 
-    visualize = 1  # whether or not to create graphic showing simulated annealing
+    visualize = 0  # whether or not to create graphic showing simulated annealing
     if visualize:
         listOfTargets = []
 

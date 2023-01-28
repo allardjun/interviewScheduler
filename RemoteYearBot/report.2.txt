@@ -1,11 +1,19 @@
-mySeed=2
-E = 1519.03
+schedule code ("mySeed"): 2
+Chen, Guangxin no requests satisfied
+Freischel, Audrey Rose no requests satisfied
+Jakielski, Rachel no requests satisfied
+Liu, Yimin no requests satisfied
+Ma, Jiayan (Yoshii) no requests satisfied
+Thomas, Isaac no requests satisfied
+Zhao, Weihao (Roy) no requests satisfied
+Zheng, Xiao no requests satisfied
+E = 0.00
 numberTimezoneViolations = 0.00
 fractionGenderedMeeting = 1.00
 facultyExcessMeetings = 0.00
-numStudentsCriticallyLow = 13.00
-FractionAsteriskFull = on average  36%, at worst  30%
-FractionOfAsteriskRequestSatisfied = on average  75%, at worst   0%
-FractionFull = on average  30%, at worst  10%
-FractionOfRequestSatisfied = on average  77%, at worst   0%
-mySeed=2
+numStudentsCriticallyLow = 6.00
+FractionAsteriskFull = on average  28%, at worst  28%
+FractionOfAsteriskRequestSatisfied = on average  66%, at worst  50%
+FractionFull = on average  26%, at worst  11%
+FractionOfRequestSatisfied = on average  56%, at worst   0%
+numStudentsNotMeetingAnyRequested = 7.00
