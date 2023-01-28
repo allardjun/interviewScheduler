@@ -31,10 +31,11 @@ def translateStudentRequests(directoryName):
     print(facultyList)
 
     missingFacultyList = ['Nobody']
+    missingFacultyCounts = []
 
     # Uncomment for Excel file with student names split in two columns
     #studentNames = x1['Last name'] + ', ' + x1['First name']
-    studentNames = x1['Student name']
+    studentNames = x1['Last Name']
 
     studentChoices_Clean = pd.DataFrame(index=studentNames, columns=['wngbngd', 'asterisk', 'Faculty requested', 'Faculty suggestions', 'Faculty names'])
 
@@ -57,6 +58,12 @@ def translateStudentRequests(directoryName):
                 fuzzyCompare = process.extractOne(facultyName,missingFacultyList, scorer=fuzz.WRatio)
                 if fuzzyCompare[1]<70:
                     missingFacultyList.append(facultyName)
+                    missingFacultyCounts.append(1)
+                else:
+                    #print(missingFacultyCounts)
+                    #print(type(missingFacultyCounts))
+                    #print(fuzzyCompare)
+                    missingFacultyCounts[missingFacultyList.index(fuzzyCompare[0])] = missingFacultyCounts[missingFacultyList.index(fuzzyCompare[0])]+1
 
             else:
                     facultyName = fuzzyCompare[0]
@@ -79,14 +86,23 @@ def translateStudentRequests(directoryName):
 
     studentChoices_matrix.fillna(0).to_excel(directoryName + '/forBot_StudentRequestsMatrix.xlsx')
 
+
+    # FACULTY ENTICER GENERATOR
     print("Let's bug these faculty:")
     #print(missingFacultyList)
-    missingFacultyListSorted = sorted(missingFacultyList, key=lambda x: x.split(" ")[-1])
-    print(*missingFacultyListSorted, sep="\n")
+    #missingFacultyListSorted = sorted(missingFacultyList, key=lambda x: x.split(" ")[-1])
+    #print(*missingFacultyListSorted, sep="\n")
+    missingFacultyList_FirstName = [faculty.split(" ")[0] for faculty in missingFacultyList]
+    df_missing_faculty = pd.DataFrame(list(zip(missingFacultyList, missingFacultyList_FirstName, missingFacultyCounts)), columns=['Faculty name', 'First name', 'Number of requests'])
+    df_missing_faculty = df_missing_faculty.sort_values(by=['Number of requests'], ascending=False)
 
+    #print("\n".join("{} {}".format(x, y) for x, y in zip(missingFacultyList, missingFacultyCounts)))
+    print(df_missing_faculty)
+
+    df_missing_faculty.to_excel(directoryName + '/fromBot_MIAFaculty.xlsx')
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    #FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/2022RealData_01290600' # EDIT FOLDERNAME HERE
-    FOLDERNAME = 'SampleData_RealAnon' # EDIT FOLDERNAME HERE
+    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2023Entry/03RecruitmentVisit/PreliminaryData' # EDIT FOLDERNAME HERE
+    #FOLDERNAME = 'SampleData_RealAnon' # EDIT FOLDERNAME HERE
     translateStudentRequests(FOLDERNAME)

@@ -16,56 +16,50 @@ def translateFacultyAvailability(directoryName):
     x1 = pd.read_excel(directoryName + '/forBot_FacultyAvailabilitySurvey.xlsx')
 
     #print(x1)
-    facultyList_df = x1[['Name','W','Max number of students']]
-    facultyList = facultyList_df['Name']
-    #print(facutlyList_df)
+    facultyList_df = x1[['First Name', 'Last Name','W','Number of recruits you would like to interview:', 'Campus Zone']]
+    facultyList = facultyList_df['First Name'] + ' ' + facultyList_df['Last Name']
+    print(facultyList_df)
     for iFaculty in range(len(facultyList)):
         facultyList[iFaculty] = facultyList[iFaculty].lstrip().rstrip()
 
     print(facultyList) # note these are e-mails right now. Need to manually change to names.
 
-    stringOfAvailableBigSlots = x1['I am available to interview students during the following time slots: ']
+    stringOfAvailableSlots = x1['I am available to interview students during the following time slots:']
 
-    # bigSlots = list()
-    # for iFaculty in range(len(x1)):
-    #     listOfAvailableBigSlots = stringOfAvailableBigSlots[iFaculty].split(';')
-    #     for bigSlot in listOfAvailableBigSlots:
-    #         bigSlot = bigSlot.lstrip()
-    #         if bigSlot not in bigSlots:
-    #             bigSlots.append(bigSlot)
-    # bigSlots.sort()
-    # bigSlots.pop(0)
+    stringOfAvailableSlots_all = '2/6 1:00 - 1:30; 2/6 1:45 - 2:15; 2/6 2:30 - 3:00; 2/6 3:15 - 3:45; 2/6 4:00 - 4:30; 2/7 1:00 - 1:30; 2/7 1:45 - 2:15; 2/7 2:30 - 3:00; 2/7 3:15 - 3:45; 2/7 4:00 - 4:30; '
+    stringOfAvailableSlots_all_with_transit = '2/6 1:00 - 1:45;2/6 1:45 - 2:30;2/6 2:30 - 3:15;2/6 3:15 - 4:00;2/6 4:00 - 4:45;2/7 1:00 - 1:45;2/7 1:45 - 2:30;2/7 2:30 - 3:15;2/7 3:15 - 4:00;2/7 4:00 - 4:45;'
+    slots = stringOfAvailableSlots_all.split(';')
+    slots_with_transit = stringOfAvailableSlots_all_with_transit.split(';')
+    tmp = []
+    for slot in slots:
+        slot = slot.lstrip()
+        tmp.append(slot)
+    slots = tmp
+    slots.pop()
 
-    # -this is a hack and will need to be fixed either in Python or the survey!
-    bigSlots = list()
-    stringOfAvailableBigSlots_all = '2/7 12 - 1 PM;2/7 1 - 2 PM;2/7 2 - 3 PM;2/7 3 - 4 PM;2/7 4 - 5 PM;2/8 12 - 1 PM;2/8 1 - 2 PM;2/8 2 - 3 PM;2/8 3 - 4 PM;2/8 4 - 5 PM;'
-    listOfAvailableBigSlots = stringOfAvailableBigSlots_all.split(';')
-    for bigSlot in listOfAvailableBigSlots:
-             bigSlot = bigSlot.lstrip()
-             if bigSlot not in bigSlots:
-                 bigSlots.append(bigSlot)
-    bigSlots.pop()
+    tmp = []
+    for slot in slots_with_transit:
+        slot = slot.lstrip()
+        tmp.append(slot)
+    slots_with_transit = tmp
+    slots_with_transit.pop()
 
-    print(bigSlots)
-      
-    slots = list()
-    for iBigSlot in bigSlots:
-        slots.append(iBigSlot + ' :00')
-        slots.append(iBigSlot + ' :30')
-
+    print(slots)
 
     # Make availability matrix, one column (faculty) at a time
     availabilityMatrix = np.zeros((len(slots), len(facultyList)))
     for iFaculty in range(len(x1)):
-        for iBigSlot in range(len(bigSlots)):
-            if bigSlots[iBigSlot] in stringOfAvailableBigSlots[iFaculty].lstrip().split(';'):
-                availabilityMatrix[2*iBigSlot+0,iFaculty] = 1
-                availabilityMatrix[2*iBigSlot+1,iFaculty] = 1
+        print(stringOfAvailableSlots[iFaculty])
+        for iSlot in range(len(slots)):
+            availability_test = stringOfAvailableSlots[iFaculty].find(slots[iSlot]) + stringOfAvailableSlots[iFaculty].find(slots_with_transit[iSlot]) > -2
+            print(slots[iSlot] + ' aka ' + slots_with_transit[iSlot] + ' Bool:' + str(availability_test)) 
+            if availability_test:
+                availabilityMatrix[iSlot,iFaculty] = 1
         # print(facultyList[iFaculty])
         # print(availabilityMatrix[:,iFaculty])
         # print(stringOfAvailableBigSlots[iFaculty])
 
-    print(availabilityMatrix)
+    #print(availabilityMatrix)
 
     # make dataframe for export
     # put in alphabetical by last name
@@ -94,6 +88,6 @@ def translateFacultyAvailability(directoryName):
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    #FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/2022RealData_01290600' # EDIT FOLDERNAME HERE
-    FOLDERNAME = 'SampleData_RealAnon'
+    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2023Entry/03RecruitmentVisit/PreliminaryData' # EDIT FOLDERNAME HERE
+    #FOLDERNAME = 'SampleData_RealAnon'
     translateFacultyAvailability(FOLDERNAME)
