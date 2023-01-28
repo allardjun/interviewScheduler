@@ -1,9 +1,3 @@
-# Part of interviewSchedule.py, for scheduling interviews between prospective grad students and PIs
-# MCSB UCI Jun Allard mcsb.uci.edu, created 2020
-# 
-# Takes studentRequestList xlsx spreadsheet (see format of sample), 
-# returns a studentRequestMatrix xlsx spreadsheet suitable for input into makeSchedule.py
-
 def translateStudentRequests(directoryName):
 
     import pandas as pd
@@ -14,10 +8,10 @@ def translateStudentRequests(directoryName):
     # Read in student requests in comma-separated list form
     x1 = pd.read_excel(directoryName + '/forBot_StudentRequestList.xlsx')
 
-    x1['Faculty names'] = x1['Faculty requested']
+    x1['Faculty names'] = x1['Faculty requests']
 
     for iStudent in x1.index:
-        x1['Faculty names'][iStudent] = str(x1['Faculty requested'][iStudent])#  + str(x1['Faculty suggestions'][iStudent]) 
+        x1['Faculty names'][iStudent] = str(x1['Faculty requests'][iStudent])#  + str(x1['Faculty suggestions'][iStudent]) 
     #x1['Faculty names'] = x1['Faculty requests'] #+ x1['Faculty suggestions']
 
     print(x1['Faculty names'])
@@ -36,7 +30,7 @@ def translateStudentRequests(directoryName):
     #studentNames = x1['Last name'] + ', ' + x1['First name']
     studentNames = x1['Student name']
 
-    studentChoices_Clean = pd.DataFrame(index=studentNames, columns=['wngbngd', 'asterisk', 'Faculty requested', 'Faculty suggestions', 'Faculty names'])
+    studentChoices_Clean = pd.DataFrame(index=studentNames, columns=['wngbngd', 'asterisk', 'Faculty requests', 'Faculty suggestions', 'Faculty names'])
 
     for iStudent in range(len(x1)):
 
@@ -88,5 +82,5 @@ def translateStudentRequests(directoryName):
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
     #FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/2022RealData_01290600' # EDIT FOLDERNAME HERE
-    FOLDERNAME = 'SampleData_RealAnon' # EDIT FOLDERNAME HERE
+    FOLDERNAME = '../SampleData_RealAnon' # EDIT FOLDERNAME HERE
     translateStudentRequests(FOLDERNAME)
