@@ -59,42 +59,44 @@ def makeSchedule(directoryName):
     if visualize:
         listOfTargets = []
 
-    ntmax = int(4e1) # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
+    ntmax = int(4e4) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
 
     # relative importances of the targets
     alpha = {
         'Timezone': 2**5,
         'Gender': 2**5,
-        'Fullness': 2**4,
+        'Fullness': 2**6,
         'Requests': 2**6,
         'AsteriskFullness': 0,
         'AsteriskRequests': 2**7,
         'FacultyFullness' : 2**7,
-        'StudentsCriticallyLow': 2**6
+        'StudentsCriticallyLow': 2**8
     }
 
-    tooManyStudentsToAFaculty = 5  # try to make sure each faculty meets no more than this many students
-    criticalNumberOfInterviews = 4  # try to make sure each students meets at least this many faculty
+    tooManyStudentsToAFaculty = 6  # try to make sure each faculty meets no more than this many students
+    criticalNumberOfInterviews = 5  # try to make sure each students meets at least this many faculty
 
 
-    # timezones
-    slotsInTimezone = {
-        'EST':(0,1,2,3,10,11,12,13),
-        'PST':(2,3,4,5,6,7,12,13,14,15,16,17), # survey says to ignore the last few slots
-        'AP':(6,7,8,9,16,17),
-        'India':(2,3,4,5,6,7,12,13,14,15,16,17)
-    }
+    # timezones -- UNUSED
+    # slotsInTimezone = {
+    #     'EST':(0,1,2,3,10,11,12,13),
+    #     'PST':(2,3,4,5,6,7,12,13,14,15,16,17), # survey says to ignore the last few slots
+    #     'AP':(6,7,8,9,16,17),
+    #     'India':(2,3,4,5,6,7,12,13,14,15,16,17)
+    # }
+
     # day
     slotsInDay = {
-        'Mon':range(0,9),
-        'Tue':range(10,19),
+        'Mon':range(0,4),
+        'Tue':range(5,9),
     }
 
     # Temperature function aka Annealing function.
     annealingPrefactor = sum(alpha.values())
 
     def kBT(ntAnneal):
-        return annealingPrefactor * np.power(1 - ntAnneal / float(ntmax+2), 6)
+        #return annealingPrefactor * np.power(1 - ntAnneal / float(ntmax+2), 6)
+        return annealingPrefactor * np.exp( - 12*ntAnneal / float(ntmax+2))
 
     # ---------------- READ INPUT FILES -------------------------------------
     # --------------- Read faculty attributes and availability
@@ -106,7 +108,7 @@ def makeSchedule(directoryName):
 
     dfFacultyAttributes = dfFacultySurvey[['First Name','Last Name', 'W','Max number of students','Office Location','Office Phone Number','Campus Zone']].reset_index()
 
-    facultyList = functools.reduce(lambda res, l: res + [l[0] + " " + l[1]], zip(list(dfFacultyAttributes['First Name']),list(dfFacultyAttributes['First Name'])), [])
+    facultyList = functools.reduce(lambda res, l: res + [l[0] + " " + l[1]], zip(list(dfFacultyAttributes['First Name']),list(dfFacultyAttributes['Last Name'])), [])
     for iFaculty in range(len(facultyList)):
         facultyList[iFaculty] = facultyList[iFaculty].lstrip().rstrip()
 
