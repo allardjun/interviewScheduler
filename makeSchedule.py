@@ -35,6 +35,7 @@ def makeSchedule(directoryName):
     import xlsxwriter
     import sys
     import os
+    import functools
     import numpy as np
     import pandas as pd
     import matplotlib.pyplot as plt
@@ -58,7 +59,7 @@ def makeSchedule(directoryName):
     if visualize:
         listOfTargets = []
 
-    ntmax = int(4e4) # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
+    ntmax = int(4e1) # int(2e4)  # total number of annealing timesteps to run. 4e4 takes about 2min CPU time.
 
     # relative importances of the targets
     alpha = {
@@ -99,33 +100,39 @@ def makeSchedule(directoryName):
     # --------------- Read faculty attributes and availability
 
     dfFacultyAvailability = pd.read_excel(
-        directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx', index_col=0).fillna(0)
+        directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx').fillna(0)
 
     dfFacultySurvey = pd.read_excel(directoryName + '/forBot_FacultyAvailabilitySurvey.xlsx', index_col=0).fillna(0)
 
-    dfFacultyAttributes = dfFacultySurvey[['Name','W','Max number of students']].reset_index()
-    facultyList = list(dfFacultyAttributes['Name'])
+    dfFacultyAttributes = dfFacultySurvey[['First Name','Last Name', 'W','Max number of students','Office Location','Office Phone Number','Campus Zone']].reset_index()
+
+    facultyList = functools.reduce(lambda res, l: res + [l[0] + " " + l[1]], zip(list(dfFacultyAttributes['First Name']),list(dfFacultyAttributes['First Name'])), [])
     for iFaculty in range(len(facultyList)):
         facultyList[iFaculty] = facultyList[iFaculty].lstrip().rstrip()
 
-    facultyLastNames = []
-    for iFaculty in range(len(facultyList)):
-        facultyLastNames.append(facultyList[iFaculty].split(' ')[-1])
-    dfFacultyAttributes['Last name'] = facultyLastNames
-    dfFacultyAttributes.sort_values(by=['Last name'], inplace=True)
+    facultyLastNames = list(dfFacultyAttributes['Last Name'])
+    # for iFaculty in range(len(facultyList)):
+    #     facultyLastNames.append(facultyList[iFaculty].split(' ')[-1])
+    # dfFacultyAttributes['Last name'] = facultyLastNames
+    # dfFacultyAttributes.sort_values(by=['Last name'], inplace=True)
     #print(dfFacultyAttributes)
 
     #dfFacultyAvailability.drop(dfFacultyAvailability.head(2).index, inplace=True)
     boolFacultyAvailability = np.nan_to_num(dfFacultyAvailability.to_numpy())
 
     facultyNames = list(dfFacultyAvailability.columns)
+    facultyNames.pop(0)
     numFaculty = len(facultyNames)
+    print(facultyNames)
+
+    print(numFaculty)
 
     boolWomenFaculty = list(dfFacultyAttributes["W"] == 1)
     facultyWomenList = np.nonzero(boolWomenFaculty)[0]
     facultyWomenSet = set(facultyWomenList)
 
     maxNumberOfMeetings = list(dfFacultyAttributes['Max number of students'])
+    #print(dfFacultyAttributes['Max number of students'])
     maxNumberOfMeetings[:] = [tooManyStudentsToAFaculty if (x==0 or x>tooManyStudentsToAFaculty) else x for x in maxNumberOfMeetings]
     #print(maxNumberOfMeetings)
 
@@ -157,11 +164,11 @@ def makeSchedule(directoryName):
     numAsterisks = boolAsterisk.count(1)
     studentAsteriskList = np.nonzero(boolAsterisk)[0]
 
-    boolGenderedStudent = list(dfStudentAttributes['W'] == 1)
+    boolGenderedStudent = list(dfStudentAttributes['wngbngd'] == 1)
     numGenderedStudents = boolGenderedStudent.count(1)
     studentGenderedList = np.nonzero(boolGenderedStudent)[0]
 
-    timezone = dfStudentAttributes['Timezone']
+    #timezone = dfStudentAttributes['Timezone']
 
 
     slotsForStudent = []
@@ -173,7 +180,7 @@ def makeSchedule(directoryName):
             #if dfStudentAttributes.iloc[iStudent].loc[day]==1:
             #    slotsForThisStudent = slotsForThisStudent | set(slotsInDay[day])
             slotsForThisStudent = slotsForThisStudent | set(slotsInDay[day]) # just use this line if everyone is here for both days. Otherwise use the two lines above.
-        slotsForThisStudent = slotsForThisStudent & set(slotsInTimezone[timezone[iStudent]])
+        slotsForThisStudent = slotsForThisStudent #& set(slotsInTimezone[timezone[iStudent]]) # Uncomment for remote meetings that need to be timezone matched
         slotsForStudent.append(list(slotsForThisStudent))
 
     # --------------- Special accommodations setup
@@ -346,6 +353,9 @@ def makeSchedule(directoryName):
     x[:] = xMin
     y[:] = yMin
 
+    print(xMin)
+    print(yMin)
+
     # ---------------- EXPORT TO SPREADSHEETS -----------------------------
     if 1:
         # --------------- All in one file, one sheet -----------------------
@@ -360,6 +370,10 @@ def makeSchedule(directoryName):
                         xNames[iTimeslot, iFaculty] = "open"
                 else:
                     xNames[iTimeslot, iFaculty] = studentNames[int(x[iTimeslot, iFaculty])]
+        print(xNames)
+        print(timeslotNames)
+        print(facultyNames)
+
         pd.DataFrame(data=xNames, index=timeslotNames, columns=facultyNames).to_excel(
             directoryName + subdirectoryName + '/fromBot_FacultySchedules.xlsx')
 
@@ -407,7 +421,7 @@ def makeSchedule(directoryName):
                     yNames[iTimeslot,0] = "..."
                 else:
                     yNames[iTimeslot,0] = facultyNames[int(y[iTimeslot, iStudent])]
-                    yNames[iTimeslot,1] = dfFacultyAttributes.iloc[int(y[iTimeslot, iStudent]),0]
+                    yNames[iTimeslot,1] = dfFacultyAttributes.iloc[int(y[iTimeslot, iStudent])].loc['Office Location']
             sheetName = studentNames[iStudent].replace(" ", "").replace("(", "").replace(")", "")
             pd.DataFrame(data=yNames, index=timeslotNames, columns=[studentNames[iStudent], "Location"]
                 ).to_excel(writer,sheet_name=sheetName)
@@ -474,6 +488,6 @@ class Targets:
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    #FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2022Entry/03RecruitmentVisit/2022RealData_01290600'  # EDIT FOLDERNAME HERE
-    FOLDERNAME = 'SampleData_RealAnon'
+    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2023Entry/03RecruitmentVisit/PreliminaryData'  # EDIT FOLDERNAME HERE
+    #FOLDERNAME = 'SampleData_RealAnon'
     makeSchedule(FOLDERNAME)
