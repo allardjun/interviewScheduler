@@ -16,7 +16,7 @@ def translateFacultyAvailability(directoryName):
     x1 = pd.read_excel(directoryName + '/forBot_FacultyAvailabilitySurvey.xlsx')
 
     #print(x1)
-    facultyList_df = x1[['First Name', 'Last Name','W','Number of recruits you would like to interview:', 'Campus Zone']]
+    facultyList_df = x1[['First Name', 'Last Name','W','Max number of students', 'Campus Zone']]
     facultyList = facultyList_df['First Name'] + ' ' + facultyList_df['Last Name']
     print(facultyList_df)
     for iFaculty in range(len(facultyList)):
@@ -44,15 +44,15 @@ def translateFacultyAvailability(directoryName):
     slots_with_transit = tmp
     slots_with_transit.pop()
 
-    print(slots)
+    #print(slots)
 
     # Make availability matrix, one column (faculty) at a time
     availabilityMatrix = np.zeros((len(slots), len(facultyList)))
     for iFaculty in range(len(x1)):
-        print(stringOfAvailableSlots[iFaculty])
+        #print(stringOfAvailableSlots[iFaculty])
         for iSlot in range(len(slots)):
             availability_test = stringOfAvailableSlots[iFaculty].find(slots[iSlot]) + stringOfAvailableSlots[iFaculty].find(slots_with_transit[iSlot]) > -2
-            print(slots[iSlot] + ' aka ' + slots_with_transit[iSlot] + ' Bool:' + str(availability_test)) 
+            #print(slots[iSlot] + ' aka ' + slots_with_transit[iSlot] + ' Bool:' + str(availability_test)) 
             if availability_test:
                 availabilityMatrix[iSlot,iFaculty] = 1
         # print(facultyList[iFaculty])
@@ -70,9 +70,13 @@ def translateFacultyAvailability(directoryName):
         facultyList_LastNameFirst.append(' '.join(reversed(indivNames))) 
     availabilityMatrixDataFrame = pd.DataFrame(data=availabilityMatrix,index=slots, columns=facultyList_LastNameFirst)    
     availabilityMatrixDataFrame.sort_index(axis=1, inplace=True) 
-    facultyList_sorted = sorted(facultyList, key=lambda x: x.split(" ")[-1])
-    availabilityMatrixDataFrame.columns = facultyList_sorted
-    print(facultyList_LastNameFirst)
+
+    facultyList = []
+    for facultyName_LastNameFirst in availabilityMatrixDataFrame.columns:
+        indivNames = facultyName_LastNameFirst.split(' ')
+        facultyList.append(' '.join(reversed(indivNames))) 
+    availabilityMatrixDataFrame.columns = facultyList
+    print(facultyList)
 
 
     # facultyLastNames = []

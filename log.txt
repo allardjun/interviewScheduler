@@ -1,0 +1,134 @@
+schedule code ("mySeed"): 7
+['Jun Allard', 'Kevin Beier', 'Elliot Botvinick', 'Naomi  Chesler', 'Ken Cho', 'Bernard Choi', 'Liz Chrastil', 'Fangyuan Ding', 'Anya Grosberg', 'Wayne Hayes', 'Ryan Hayes', 'Barbara Jusiak', 'Evgeny Kvon', 'Arthur Lander', 'Wei Li', 'Chang Liu', 'Ray Luo', 'Chris Miles', 'Jose Ranz', 'Elizabeth Read', 'Thomas Schilling', 'Marcus Seldin', 'Xiaoyu Shi', 'Albert Siryaporn', 'Craig Stark', 'Katherine Thompson-Peer', 'Jack Xin', 'Alvin Yu', 'Jin Yu', 'Jing Zhang']
+30
+Chrastil 6
+Liu 4
+Grosberg 1
+Miles 3
+Beier 3
+Ding 1
+Xin 2
+Yu 2
+Yu 4
+Siryaporn 3
+Ranz 4
+Luo 3
+Li 3
+Zhang 6
+Hayes 6
+Cho 3
+Botvinick 2
+Kvon 3
+Stark 4
+Lander 3
+Jusiak 3
+Shi 4
+Seldin 3
+Choi 4
+Hayes 3
+Thompson-Peer 3
+Allard 4
+Schilling 6
+Read 4
+Chesler 3
+Candib no requests satisfied
+Henroid no requests satisfied
+Hussain no requests satisfied
+Liu no requests satisfied
+Parker no requests satisfied
+[[ 1. -1.  8. -1. -1. -1. -1.  2.  4. -1. 23. 16. -1. 12. 24. -1. 14. 15.
+  -1. -1. 21. -1. 20. -1. -1. -1. -1. -1. 13.  7.]
+ [ 7. 21. -1. -1. -1. -1. -1. -1. -1. -1.  1. -1. -1.  9. 18. -1. -1.  5.
+  -1. -1. -1. -1.  0. -1. -1. -1. 17. -1. 24.  2.]
+ [-1. 16. -1.  8. -1. -1. -1. -1. -1. -1. -1.  3. -1. 13.  2. 17. -1.  1.
+  -1. -1. 15. -1. -1. -1. 18. -1. -1. 23. -1. 12.]
+ [15. -1. -1.  1.  8. 19. -1. -1. -1. 16. -1. 12. -1. 21. 13. 23. -1. -1.
+  24. -1. 18. -1. -1.  2. -1.  6. -1. 20. 17. -1.]
+ [-1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1.
+  -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1.]
+ [12. -1. -1. -1. -1. -1. 20. -1. -1. -1. -1. -1. 15. -1. 22. -1. 23. -1.
+  13. -1. -1. 18. -1. -1. -1.  8. 21. -1. -1. -1.]
+ [14. 18. -1. -1. -1. -1. -1. -1. -1. -1.  8. -1. -1. 20. 16. -1. -1. -1.
+   2. -1. -1. 15. 12. -1. 13. 24.  5. -1. -1. -1.]
+ [11. -1. -1. -1. 23. -1. -1. -1. -1. -1. 12. -1. 21. -1. -1. 20. -1. -1.
+  -1. 24. -1.  8. -1.  1. 10. -1. 16. -1. -1. -1.]
+ [-1.  2. -1. -1. 16. -1. 13. -1. -1.  1. -1. -1. 24. 15. -1. -1. -1. -1.
+  20. 18. -1. -1. -1. 23. -1. -1. -1. -1. 21. -1.]
+ [-1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1.
+  -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1.]]
+[[-1.  0.  7. -1.  8. -1. -1. 29.  2. -1. -1. -1. 13. 28. 16. 17. 11. -1.
+  -1. -1. 22. 20. -1. 10. 14.]
+ [22. 10. 29. -1. -1. 17. -1.  0. -1. 13. -1. -1. -1. -1. -1. -1. -1. 26.
+  14. -1. -1.  1. -1. -1. 28.]
+ [-1. 17. 14. 11. -1. -1. -1. -1.  3. -1. -1. -1. 29. 13. -1. 20.  1. 15.
+  24. -1. -1. -1. -1. 27. -1.]
+ [-1.  3. 23. -1. -1. -1. 25. -1.  4. -1. -1. -1. 11. 14. -1.  0.  9. 28.
+  20.  5. 27. 13. -1. 15. 18.]
+ [-1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1.
+  -1. -1. -1. -1. -1. -1. -1.]
+ [-1. -1. -1. -1. -1. -1. -1. -1. 25. -1. -1. -1.  0. 18. -1. 12. -1. -1.
+  21. -1.  6. 26. 14. 16. -1.]
+ [-1. -1. 18. -1. -1. 26. -1. -1. 10. -1. -1. -1. 22. 24.  0. 21. 14. -1.
+   1. -1. 13. -1. -1. -1. 25.]
+ [-1. 23. -1. -1. -1. -1. -1. -1. 21. -1. 24.  0. 10. -1. -1. -1. 26. -1.
+  -1. -1. 15. 12. -1.  4. 19.]
+ [-1.  9.  1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1.  6. -1. 13.  4. -1.
+  19. -1. 18. 28. -1. 23. 12.]
+ [-1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1.
+  -1. -1. -1. -1. -1. -1. -1.]]
+[['Cannistra' 'open' 'Larson' '...' '...' '...' '...' 'Chen' 'Hussain'
+  '...' 'Yang' 'Pierce ' 'open' 'Lydon' 'Zanussi' 'open' 'Marcus'
+  'Parker' '...' '...' 'Xu' '...' 'Xella' '...' 'open' '...' 'open' '...'
+  'Ma' 'Krishnan']
+ ['Krishnan' 'Xu' 'open' '...' '...' 'open' '...' '...' '...' '...'
+  'Cannistra' 'open' 'open' 'Li' 'Solano' 'open' '...' 'Iyer' '...' '...'
+  'open' '...' 'Candib' '...' 'open' 'open' 'Poordian' '...' 'Zanussi'
+  'Chen']
+ ['open' 'Pierce ' 'open' 'Larson' 'open' 'open' '...' '...' '...' '...'
+  '...' 'Henroid' 'open' 'Ma' 'Chen' 'Poordian' '...' 'Cannistra' 'open'
+  '...' 'Parker' '...' 'open' '...' 'Solano' 'open' 'open' 'Yang' 'open'
+  'Lydon']
+ ['Parker' 'open' 'open' 'Cannistra' 'Larson' 'Tith ' '...' '...' '...'
+  'Pierce ' '...' 'Lydon' '...' 'Xu' 'Ma' 'Yang' '...' '...' 'Zanussi'
+  '...' 'Solano' '...' 'open' 'Chen' 'open' 'Keegan' 'open' 'Xella'
+  'Poordian' '...']
+ ['open' 'open' 'open' 'open' 'open' 'open' '...' '...' '...' 'open'
+  '...' 'open' '...' '...' 'open' 'open' '...' '...' '...' '...' '...'
+  '...' '...' 'open' '...' '...' 'open' '...' 'open' '...']
+ ['Lydon' 'open' 'open' '...' '...' '...' 'Xella' '...' '...' '...'
+  'open' '...' 'Parker' 'open' 'Xu' 'open' 'Yang' '...' 'Ma' '...' '...'
+  'Solano' 'open' '...' 'open' 'Larson' 'Xu' '...' 'open' '...']
+ ['Marcus' 'Solano' 'open' '...' '...' '...' 'open' '...' '...' '...'
+  'Larson' '...' 'open' 'Xella' 'Pierce ' 'open' '...' '...' 'Chen' '...'
+  '...' 'Parker' 'Lydon' '...' 'Ma' 'Zanussi' 'Iyer' '...' 'open' '...']
+ ['Liu' 'open' 'open' '...' 'Yang' '...' 'open' '...' '...' '...' 'Lydon'
+  '...' 'Xu' 'open' '...' 'Xella' '...' '...' 'open' 'Zanussi' '...'
+  'Larson' 'open' 'Cannistra' 'Li' '...' 'Pierce ' '...' 'open' 'open']
+ ['open' 'Chen' 'open' '...' 'Pierce ' '...' 'Ma' '...' '...' 'Cannistra'
+  '...' '...' 'Zanussi' 'Parker' '...' 'open' '...' '...' 'Xella'
+  'Solano' '...' '...' 'open' 'Yang' 'open' '...' '...' '...' 'Xu' '...']
+ ['open' 'open' 'open' '...' 'open' '...' '...' '...' '...' 'open' '...'
+  '...' '...' '...' 'open' 'open' '...' '...' '...' '...' '...' '...'
+  '...' '...' '...' '...' '...' '...' 'open' '...']]
+0     Monday Feb 6th, 1:00 - 1:30
+1     Monday Feb 6th, 1:45 - 2:15
+2     Monday Feb 6th, 2:30 - 3:00
+3     Monday Feb 6th, 3:15 - 3:45
+4     Monday Feb 6th, 4:00 - 4:30
+5    Tuesday Feb 7th, 1:00 - 1:30
+6    Tuesday Feb 7th, 1:45 - 2:15
+7    Tuesday Feb 7th, 2:30 - 3:00
+8    Tuesday Feb 7th, 3:15 - 3:45
+9    Tuesday Feb 7th, 4:00 - 4:30
+Name: Timeslot name, dtype: object
+['Jun Allard', 'Kevin Beier', 'Elliot Botvinick', 'Naomi  Chesler', 'Ken Cho', 'Bernard Choi', 'Liz Chrastil', 'Fangyuan Ding', 'Anya Grosberg', 'Wayne Hayes', 'Ryan Hayes', 'Barbara Jusiak', 'Evgeny Kvon', 'Arthur Lander', 'Wei Li', 'Chang Liu', 'Ray Luo', 'Chris Miles', 'Jose Ranz', 'Elizabeth Read', 'Thomas Schilling', 'Marcus Seldin', 'Xiaoyu Shi', 'Albert Siryaporn', 'Craig Stark', 'Katherine Thompson-Peer', 'Jack Xin', 'Alvin Yu', 'Jin Yu', 'Jing Zhang']
+E = 0.00
+numberTimezoneViolations = 0.00
+fractionGenderedMeeting = 1.00
+facultyExcessMeetings = 0.00
+numStudentsCriticallyLow = 13.00
+FractionAsteriskFull = on average  60%, at worst  60%
+FractionOfAsteriskRequestSatisfied = on average  50%, at worst   0%
+FractionFull = on average  36%, at worst  10%
+FractionOfRequestSatisfied = on average  65%, at worst   0%
+numStudentsNotMeetingAnyRequested = 5.00

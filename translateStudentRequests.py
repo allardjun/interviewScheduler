@@ -74,11 +74,20 @@ def translateStudentRequests(directoryName):
         studentChoices_Clean.iloc[iStudent]['Faculty names'] = thisStudentChoices_Clean
 
     # sort list by last name
-    facultyListSorted = sorted(facultyList, key=lambda x: x.split(" ")[-1])
-    facultyListSorted = facultyList#sorted(facultyList, key=lambda x: x.split(" ")[-1])
+    #facultyListSorted = sorted(facultyList, key=lambda x: x.split(" ")[-1])
+    #facultyListSorted = facultyList#sorted(facultyList, key=lambda x: x.split(" ")[-1])
+    facultyList_LastNameFirst = []
+    for facultyName in facultyList:
+        indivNames = facultyName.split(' ')
+        facultyList_LastNameFirst.append(' '.join(reversed(indivNames))) 
+    facultyList_LastNameFirst_Sorted = sorted(facultyList_LastNameFirst)
+    facultyList_Sorted = []
+    for facultyName in facultyList_LastNameFirst_Sorted:
+        indivNames = facultyName.split(' ')
+        facultyList_Sorted.append(' '.join(reversed(indivNames))) 
 
     # Turn student requests into matrix form
-    studentChoices_matrix = pd.DataFrame(columns=facultyListSorted, index=studentNames)
+    studentChoices_matrix = pd.DataFrame(columns=facultyList_Sorted, index=studentNames)
 
     for iStudent in range(len(x1)):
         for iFaculty in studentChoices_Clean.iloc[iStudent]['Faculty names']:

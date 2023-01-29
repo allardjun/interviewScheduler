@@ -7,6 +7,7 @@ def makeSchedule(directoryName):
 
     # ---------------- READ INPUT FILES -------------------------------------
     # --------------- Read faculty attributes
+    # --------------- Read faculty availability matrix
     # --------------- Get student requests
     # --------------- Read student attributes
     # --------------- Special accommodations setup
@@ -55,11 +56,11 @@ def makeSchedule(directoryName):
     np.random.seed(mySeed)
     print("schedule code (\"mySeed\"): " + str(mySeed))
 
-    visualize = 1  # whether or not to create graphic showing simulated annealing
+    visualize = 0  # whether or not to create graphic showing simulated annealing
     if visualize:
         listOfTargets = []
 
-    ntmax = int(4e4) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
+    ntmax = int(2e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
 
     # relative importances of the targets
     alpha = {
@@ -92,42 +93,55 @@ def makeSchedule(directoryName):
     }
 
     # Temperature function aka Annealing function.
-    annealingPrefactor = sum(alpha.values())
+    annealingPrefactor = 2*sum(alpha.values())
 
     def kBT(ntAnneal):
         #return annealingPrefactor * np.power(1 - ntAnneal / float(ntmax+2), 6)
+        number_of_nades = np.log(max(alpha.values())) - np.log(2**6)+3
         return annealingPrefactor * np.exp( - 12*ntAnneal / float(ntmax+2))
 
     # ---------------- READ INPUT FILES -------------------------------------
+
+    ###########################################################################
+    # --------------- FACULTY 
     # --------------- Read faculty attributes and availability
 
-    dfFacultyAvailability = pd.read_excel(
-        directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx').fillna(0)
+    dfFacultyAvailability = pd.read_excel(directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx', index_col=0).fillna(0)
 
     dfFacultySurvey = pd.read_excel(directoryName + '/forBot_FacultyAvailabilitySurvey.xlsx', index_col=0).fillna(0)
-
+    dfFacultySurvey.sort_values(by=['Last Name', 'First Name'], inplace=True)
     dfFacultyAttributes = dfFacultySurvey[['First Name','Last Name', 'W','Max number of students','Office Location','Office Phone Number','Campus Zone']].reset_index()
+    #print(dfFacultyAttributes)
 
     facultyList = functools.reduce(lambda res, l: res + [l[0] + " " + l[1]], zip(list(dfFacultyAttributes['First Name']),list(dfFacultyAttributes['Last Name'])), [])
     for iFaculty in range(len(facultyList)):
         facultyList[iFaculty] = facultyList[iFaculty].lstrip().rstrip()
+    dfFacultyAttributes['Faculty name'] = facultyList
 
-    facultyLastNames = list(dfFacultyAttributes['Last Name'])
-    # for iFaculty in range(len(facultyList)):
-    #     facultyLastNames.append(facultyList[iFaculty].split(' ')[-1])
+    # assertion test
+    #print(list(dfFacultyAttributes['Faculty name']))
+    #print(list(dfFacultyAvailability.columns)[1:])
+    if not all(dfFacultyAttributes['Faculty name'] == list(dfFacultyAvailability.columns)):
+        # this should always pass, since the above file was made automatically
+        raise Exception('The faculty names in the xlsx files do not match.')
+    # facultyLastNames = list(dfFacultyAttributes['Last Name'])
+    # # for iFaculty in range(len(facultyList)):
+    # #     facultyLastNames.append(facultyList[iFaculty].split(' ')[-1])
     # dfFacultyAttributes['Last name'] = facultyLastNames
     # dfFacultyAttributes.sort_values(by=['Last name'], inplace=True)
-    #print(dfFacultyAttributes)
+    # print(dfFacultyAttributes)
+    # facultyLastNames = list(dfFacultyAttributes['Last Name'])
+    
 
     #dfFacultyAvailability.drop(dfFacultyAvailability.head(2).index, inplace=True)
     boolFacultyAvailability = np.nan_to_num(dfFacultyAvailability.to_numpy())
 
     facultyNames = list(dfFacultyAvailability.columns)
-    facultyNames.pop(0)
+    #facultyNames.pop(0)
     numFaculty = len(facultyNames)
     print(facultyNames)
 
-    print(numFaculty)
+    print('Number of faculty: ' +str(numFaculty))
 
     boolWomenFaculty = list(dfFacultyAttributes["W"] == 1)
     facultyWomenList = np.nonzero(boolWomenFaculty)[0]
@@ -136,31 +150,37 @@ def makeSchedule(directoryName):
     maxNumberOfMeetings = list(dfFacultyAttributes['Max number of students'])
     #print(dfFacultyAttributes['Max number of students'])
     maxNumberOfMeetings[:] = [tooManyStudentsToAFaculty if (x==0 or x>tooManyStudentsToAFaculty) else x for x in maxNumberOfMeetings]
-    #print(maxNumberOfMeetings)
-
+    # debugging
+    print("\n".join("{} can meet {} students".format(x, y) for x, y in zip(facultyNames, maxNumberOfMeetings)))
 
     timeslotNames = dfFacultyAvailability.index
     # Make nicer timeslot names from another excel file.
-    dfTimeslotNames = pd.read_excel(
-        directoryName + '/forBot_timeslotNames.xlsx').fillna(0)
+    dfTimeslotNames = pd.read_excel(directoryName + '/forBot_timeslotNames.xlsx').fillna(0)
     timeslotNames = dfTimeslotNames['Timeslot name']
     numTimeslots = len(timeslotNames)
 
+    ###########################################################################
+    # --------------- STUDENTS 
     # --------------- Get student requests
-    dfStudentRequests = pd.read_excel(
-        directoryName + '/forBot_StudentRequestsMatrix.xlsx', index_col=0).fillna(0)
+    dfStudentRequests = pd.read_excel(directoryName + '/forBot_StudentRequestsMatrix.xlsx', index_col=0).fillna(0)
+
+    #print(dfFacultyAvailability.columns)
+    #print(dfStudentRequests.columns)
+    if not all(dfFacultyAvailability.columns == dfStudentRequests.columns):
+        raise Exception('The faculty names in the xlsx files do not match.')
+
 
     boolStudentRequests = np.nan_to_num(dfStudentRequests.to_numpy())
     studentNames = dfStudentRequests.index
-    studentNamesList = list(studentNames)
+    #studentNamesList = list(studentNames)
     numStudents = len(studentNames)
 
     # --------------- Read student attributes
-    dfStudentAttributes = pd.read_excel(
-        directoryName + '/forBot_StudentRequestList.xlsx', index_col=0)
+    dfStudentAttributes = pd.read_excel(directoryName + '/forBot_StudentRequestList.xlsx', index_col=0)
     if not all(dfStudentRequests.index == studentNames):
         # this should always pass, since the above file was made automatically
-        print('The student names in the xlsx files do not match.')
+        raise Exception('The student names in the xlsx files do not match.')
+
 
     boolAsterisk = list(dfStudentAttributes['Asterisk'] == 1)
     numAsterisks = boolAsterisk.count(1)
@@ -185,6 +205,7 @@ def makeSchedule(directoryName):
         slotsForThisStudent = slotsForThisStudent #& set(slotsInTimezone[timezone[iStudent]]) # Uncomment for remote meetings that need to be timezone matched
         slotsForStudent.append(list(slotsForThisStudent))
 
+    ###########################################################################
     # --------------- Special accommodations setup
     # blank for now!
 
@@ -221,11 +242,22 @@ def makeSchedule(directoryName):
                 facultyAvailableNow = boolFacultyAvailability[iTimeslot, iFaculty]
                 if facultyAvailableNow:
                     iStudent = np.random.randint(numStudents)
+
+                    # debugging
+                    #if (nt>9617.96693926):
+                    #    print('nt=' + str(nt) + ', kBT(nt)=' + str(kBT(nt)) + ', iFaculty=' + str(iFaculty))
+                    #if (kBT(nt)<2**6) and (iFaculty==0) and (iStudent==0):
+                        #print('nt=' + str(nt) + ', kBT(nt)=' + str(kBT(nt)) + ', iFaculty=' + str(iFaculty) + ', iStudent=' + str(iStudent) + ', iTimeslot=' + str(iTimeslot))
+
                     if iStudent not in xPropose[:, iFaculty]:
                         newStudent = 1
                         if iTimeslot in slotsForStudent[iStudent]:
                             timezoneSatisfied = 1
             xPropose[iTimeslot, iFaculty] = iStudent
+
+            #if (nt==8036):
+                #print('nt=' + str(nt) + ', kBT(nt)=' + str(kBT(nt)) + ', iFaculty=' + str(iFaculty) + ', iStudent=' + str(iStudent) + ', iTimeslot=' + str(iTimeslot))
+                #print('xPropose[iTimeslot, iFaculty] =' +  str(xPropose[iTimeslot, iFaculty]))
 
             # --------------- Special accommodations: students with partial schedules
             # Nothing here yet!
@@ -248,6 +280,10 @@ def makeSchedule(directoryName):
             # --------------- Impose other special accomodations
             # Nothing here yet!
             hardConstraintSatisfied = 1
+
+            #if (nt==8036):
+                #print('nt=' + str(nt) + ', kBT(nt)=' + str(kBT(nt)) + ', iFaculty=' + str(iFaculty) + ', iStudent=' + str(iStudent) + ', iTimeslot=' + str(iTimeslot))
+                #print('hardConstraintSatisfied =' +  str(hardConstraintSatisfied))
 
         # --------------- Compute targets
 
@@ -313,6 +349,13 @@ def makeSchedule(directoryName):
         proposalTargets.facultyExcessMeetings = 0
         for iFaculty in range(numFaculty):
             numMeetings = numTimeslots - sum(xPropose[:, iFaculty] == -1)
+
+            # debugging
+            #if nt==8036 or nt==8034:
+            #    print('nt=' + str(nt) + ', kBT(nt)=' + str(kBT(nt)) + ', iFaculty=' + str(iFaculty) + ', iStudent=' + str(iStudent) + ', iTimeslot=' + str(iTimeslot))
+            #   print('iFaculty=' + str(iFaculty) + 'numMeetings, maxNumberOfMeetings[iFaculty]=' + str(numMeetings) + ', ' +str(maxNumberOfMeetings[iFaculty]))
+
+
             if numMeetings > maxNumberOfMeetings[iFaculty]:#tooManyStudentsToAFaculty:
                 proposalTargets.facultyExcessMeetings += numMeetings - maxNumberOfMeetings[iFaculty]
 
@@ -332,9 +375,23 @@ def makeSchedule(directoryName):
                                     + proposalTargets.FractionOfRequestSatisfied["mean"] )
         )
 
+        # debugging
+        #if (nt==8036) or (nt==8034):
+            #print('nt=' + str(nt) + ', kBT(nt)=' + str(kBT(nt)) + ', iFaculty=' + str(iFaculty) + ', iStudent=' + str(iStudent) + ', iTimeslot=' + str(iTimeslot))
+            #print('EPropose =' +  str(EPropose) + ', E=' + str(E))
+            #proposalTargets.print()
+
+
         # Boltzmann test
         # Do it as two if statements to avoid runtime overflow.
         if EPropose < E or (np.random.rand() < np.exp(-(EPropose - E) / kBT(nt))):
+
+            # debugging
+            #if (nt>8010 and nt < 8040):
+                #print('nt=' + str(nt))
+                #print('EPropose =' +  str(EPropose) + ', E=' + str(E))
+                #print('I accepted.')
+
             E = EPropose
             x[:] = xPropose
             y[:] = yPropose
@@ -355,8 +412,8 @@ def makeSchedule(directoryName):
     x[:] = xMin
     y[:] = yMin
 
-    print(xMin)
-    print(yMin)
+    #print(xMin)
+    #print(yMin)
 
     # ---------------- EXPORT TO SPREADSHEETS -----------------------------
     if 1:
@@ -372,9 +429,9 @@ def makeSchedule(directoryName):
                         xNames[iTimeslot, iFaculty] = "open"
                 else:
                     xNames[iTimeslot, iFaculty] = studentNames[int(x[iTimeslot, iFaculty])]
-        print(xNames)
-        print(timeslotNames)
-        print(facultyNames)
+        #print(xNames)
+        #print(timeslotNames)
+        #print(facultyNames)
 
         pd.DataFrame(data=xNames, index=timeslotNames, columns=facultyNames).to_excel(
             directoryName + subdirectoryName + '/fromBot_FacultySchedules.xlsx')
@@ -412,7 +469,7 @@ def makeSchedule(directoryName):
                     ).to_excel(writer,sheet_name=sheetName)
                 writer.sheets[sheetName].set_column('A:A', 35)
                 writer.sheets[sheetName].set_column('B:B', 30)
-        writer.save()
+        writer.close()
 
         writer = pd.ExcelWriter(directoryName + subdirectoryName + '/fromBot_StudentSchedules_1SheetEach.xlsx', engine='xlsxwriter')
         # output student schedules with names
@@ -429,7 +486,7 @@ def makeSchedule(directoryName):
                 ).to_excel(writer,sheet_name=sheetName)
             writer.sheets[sheetName].set_column('A:A', 35)
             writer.sheets[sheetName].set_column('B:C', 30)
-        writer.save()
+        writer.close()
 
     # ---------------- REPORTING - HOW'D WE DO? -----------------------------
 
@@ -487,6 +544,18 @@ class Targets:
                 setattr(targetCopy,iTargetName,iTargetValue)
         return targetCopy
 
+
+    def print(self):
+        print('E=' + str(self.E))
+        print('numberTimezoneViolations=' + str(self.numberTimezoneViolations))
+        print('fractionGenderedMeeting=' + str(self.fractionGenderedMeeting))
+        print('facultyExcessMeetings=' + str(self.facultyExcessMeetings))
+        print('numStudentsCriticallyLow=' + str(self.numStudentsCriticallyLow))
+        print('FractionAsteriskFull=' + str(self.FractionAsteriskFull))
+        print('FractionOfAsteriskRequestSatisfied=' + str(self.FractionOfAsteriskRequestSatisfied))
+        print('FractionFull=' + str(self.FractionFull))
+        print('FractionOfRequestSatisfied=' + str(self.FractionOfRequestSatisfied))
+        print('numStudentsNotMeetingAnyRequested=' + str(self.numStudentsNotMeetingAnyRequested))
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
