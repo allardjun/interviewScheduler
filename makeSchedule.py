@@ -60,7 +60,7 @@ def makeSchedule(directoryName):
     if visualize:
         listOfTargets = []
 
-    ntmax = int(5e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
+    ntmax = int(2e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
 
     # relative importances of the targets
     alpha = {
@@ -71,7 +71,8 @@ def makeSchedule(directoryName):
         'AsteriskFullness': 0,
         'AsteriskRequests': 2**7,
         'FacultyFullness' : 2**8,
-        'StudentsCriticallyLow': 2**7
+        'StudentsCriticallyLow': 2**7,
+        'Treks': 2**5
     }
 
     tooManyStudentsToAFaculty = 6  # try to make sure each faculty meets no more than this many students
@@ -158,6 +159,8 @@ def makeSchedule(directoryName):
     dfTimeslotNames = pd.read_excel(directoryName + '/forBot_timeslotNames.xlsx').fillna(0)
     timeslotNames = dfTimeslotNames['Timeslot name']
     numTimeslots = len(timeslotNames)
+
+    facultyCampusZone = list(dfFacultyAttributes['Campus Zone'])
 
     ###########################################################################
     # --------------- STUDENTS 
@@ -333,8 +336,7 @@ def makeSchedule(directoryName):
         proposalTargets.FractionFull["min"] = min(fractionFull)
 
         # TARGET: Student should meet at least a set number of faculty
-        proposalTargets.numStudentsCriticallyLow = sum(
-            fractionFull <= criticalNumberOfInterviews/float(numTimeslots))
+        proposalTargets.numStudentsCriticallyLow = sum(fractionFull <= criticalNumberOfInterviews/float(numTimeslots))
 
         # TARGET: Students should meet in their own timezone block
         proposalTargets.numberTimezoneViolations = 0
@@ -359,6 +361,18 @@ def makeSchedule(directoryName):
             if numMeetings > maxNumberOfMeetings[iFaculty]:#tooManyStudentsToAFaculty:
                 proposalTargets.facultyExcessMeetings += numMeetings - maxNumberOfMeetings[iFaculty]
 
+        # TARGET: Not too much walking back and forth
+        treks = fractionFull # just a convenient array
+        for iStudent in range(numStudents):
+            treks[iStudent] = 0
+            for iTimeslot in range(1,numTimeslots):
+                if yPropose[iTimeslot,iStudent] != -1:
+                    if facultyCampusZone[int(yPropose[iTimeslot,iStudent])] != facultyCampusZone[int(yPropose[iTimeslot-1,iStudent])]:
+                        treks[iStudent] = treks[iStudent]+1
+        
+        proposalTargets.numTreks["mean"] = sum(treks)/float(numStudents)
+        proposalTargets.numTreks["worst"] = max(treks)    
+
         # --------------- Boltzmann test
         EPropose = - (
             alpha['Timezone'] * proposalTargets.numberTimezoneViolations
@@ -373,6 +387,8 @@ def makeSchedule(directoryName):
                                     + proposalTargets.FractionFull["mean"] )
             + alpha['Requests'] * (10*proposalTargets.FractionOfRequestSatisfied["min"]
                                     + proposalTargets.FractionOfRequestSatisfied["mean"] )
+            - alpha['Treks'] * (10*proposalTargets.numTreks["worst"]
+                                    + proposalTargets.numTreks["mean"] )
         )
 
         # debugging
@@ -491,13 +507,7 @@ def makeSchedule(directoryName):
 
     # ---------------- REPORTING - HOW'D WE DO? -----------------------------
 
-    for i, iTarget in enumerate(vars(minTargets).items(),start=1):
-
-        if isinstance(iTarget[1],dict): # if it's a target with a min and a mean
-            print('%s = on average %3.0f%%, at worst %3.0f%%' % (iTarget[0], 100*getattr(minTargets,iTarget[0])['mean'], 100*getattr(minTargets,iTarget[0])['min']))
-        else:
-            print('%s = %3.2f' % (iTarget[0], getattr(minTargets,iTarget[0])))
-
+    minTargets.print()
 
     print('Total number of meetings offered by faculty:' + str(sum(maxNumberOfMeetings)))
     print('Total number of student meetings:' + str(np.count_nonzero(yMin != -1)))
@@ -517,7 +527,7 @@ def makeSchedule(directoryName):
                 ax = fig.add_subplot(numberOfPlots, 1, i)
                 ax.title.set_text(iTarget[0])
                 for nt in ntToPlot[::100]:
-                    plt.plot(nt,getattr(listOfTargets[nt],iTarget[0])['min'], 'xr')
+                    plt.plot(nt,getattr(listOfTargets[nt],iTarget[0])['worst'], 'xr')
                     plt.plot(nt,getattr(listOfTargets[nt],iTarget[0])['mean'], 'ob')
             else:
                 ax = fig.add_subplot(numberOfPlots, 1, i)
@@ -534,33 +544,46 @@ class Targets:
         self.fractionGenderedMeeting = 0
         self.facultyExcessMeetings = 0
         self.numStudentsCriticallyLow = 0
-        self.FractionAsteriskFull = {'min':0, 'mean':0}
-        self.FractionOfAsteriskRequestSatisfied = {'min':0, 'mean':0}
-        self.FractionFull= {'min':0, 'mean':0}
-        self.FractionOfRequestSatisfied = {'min':0, 'mean':0}
+        self.FractionAsteriskFull = {'worst':0, 'mean':0}
+        self.FractionOfAsteriskRequestSatisfied = {'worst':0, 'mean':0}
+        self.FractionFull= {'worst':0, 'mean':0}
+        self.FractionOfRequestSatisfied = {'worst':0, 'mean':0}
         self.numStudentsNotMeetingAnyRequested = 0
+        self.numTreks = {'worst':0, 'mean':0}
 
     def copy(self):
         targetCopy = Targets()
         for iTargetName, iTargetValue in vars(self).items():
             if isinstance(iTargetValue,dict):
-                setattr(targetCopy,iTargetName,{'min':iTargetValue['min'], 'mean':iTargetValue['mean']})
+                setattr(targetCopy,iTargetName,{'worst':iTargetValue['worst'], 'mean':iTargetValue['mean']})
             else:
                 setattr(targetCopy,iTargetName,iTargetValue)
         return targetCopy
 
 
     def print(self):
-        print('E=' + str(self.E))
-        print('numberTimezoneViolations=' + str(self.numberTimezoneViolations))
-        print('fractionGenderedMeeting=' + str(self.fractionGenderedMeeting))
-        print('facultyExcessMeetings=' + str(self.facultyExcessMeetings))
-        print('numStudentsCriticallyLow=' + str(self.numStudentsCriticallyLow))
-        print('FractionAsteriskFull=' + str(self.FractionAsteriskFull))
-        print('FractionOfAsteriskRequestSatisfied=' + str(self.FractionOfAsteriskRequestSatisfied))
-        print('FractionFull=' + str(self.FractionFull))
-        print('FractionOfRequestSatisfied=' + str(self.FractionOfRequestSatisfied))
-        print('numStudentsNotMeetingAnyRequested=' + str(self.numStudentsNotMeetingAnyRequested))
+        # print('E=' + str(self.E))
+        # print('numberTimezoneViolations=' + str(self.numberTimezoneViolations))
+        # print('fractionGenderedMeeting=' + str(self.fractionGenderedMeeting))
+        # print('facultyExcessMeetings=' + str(self.facultyExcessMeetings))
+        # print('numStudentsCriticallyLow=' + str(self.numStudentsCriticallyLow))
+        # print('FractionAsteriskFull=' + str(self.FractionAsteriskFull))
+        # print('FractionOfAsteriskRequestSatisfied=' + str(self.FractionOfAsteriskRequestSatisfied))
+        # print('FractionFull=' + str(self.FractionFull))
+        # print('FractionOfRequestSatisfied=' + str(self.FractionOfRequestSatisfied))
+        # print('numStudentsNotMeetingAnyRequested=' + str(self.numStudentsNotMeetingAnyRequested))
+        # print('numStudentsNotMeetingAnyRequested=' + str(self.numStudentsNotMeetingAnyRequested))
+
+        for i, iTarget in enumerate(vars(self).items(),start=1):
+
+            if iTarget[0]=='numTreks':
+                print('%s = on average %3.0f, at worst %3.0f' % (iTarget[0], getattr(self,iTarget[0])['mean'], getattr(self,iTarget[0])['worst']))
+            elif isinstance(iTarget[1],dict): # if it's a target with a min and a mean
+                print('%s = on average %3.0f%%, at worst %3.0f%%' % (iTarget[0], 100*getattr(self,iTarget[0])['mean'], 100*getattr(self,iTarget[0])['worst']))
+            else:
+                print('%s = %3.2f' % (iTarget[0], getattr(self,iTarget[0])))
+
+
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
