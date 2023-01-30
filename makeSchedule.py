@@ -120,8 +120,8 @@ def makeSchedule(directoryName):
     dfFacultyAttributes['Faculty name'] = facultyList
 
     # assertion test
-    #print(list(dfFacultyAttributes['Faculty name']))
-    #print(list(dfFacultyAvailability.columns)[1:])
+    print(list(dfFacultyAttributes['Faculty name']))
+    print(list(dfFacultyAvailability.columns))
     if not all(dfFacultyAttributes['Faculty name'] == list(dfFacultyAvailability.columns)):
         # this should always pass, since the above file was made automatically
         raise Exception('The faculty names in the xlsx files do not match.')
@@ -202,9 +202,9 @@ def makeSchedule(directoryName):
         for day in ('Mon','Tue'):
             #print(iStudent)
             #print(day)
-            #if dfStudentAttributes.iloc[iStudent].loc[day]==1:
-            #    slotsForThisStudent = slotsForThisStudent | set(slotsInDay[day])
-            slotsForThisStudent = slotsForThisStudent | set(slotsInDay[day]) # just use this line if everyone is here for both days. Otherwise use the two lines above.
+            if dfStudentAttributes.iloc[iStudent].loc[day]==1:
+                slotsForThisStudent = slotsForThisStudent | set(slotsInDay[day])
+            #slotsForThisStudent = slotsForThisStudent | set(slotsInDay[day]) # just use this line if everyone is here for both days. Otherwise use the two lines above.
         slotsForThisStudent = slotsForThisStudent #& set(slotsInTimezone[timezone[iStudent]]) # Uncomment for remote meetings that need to be timezone matched
         slotsForStudent.append(list(slotsForThisStudent))
 
@@ -587,6 +587,6 @@ class Targets:
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2023Entry/03RecruitmentVisit/PreliminaryData'  # EDIT FOLDERNAME HERE
+    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2023Entry/03RecruitmentVisit/2023RealData'  # EDIT FOLDERNAME HERE
     #FOLDERNAME = 'SampleData_RealAnon'
     makeSchedule(FOLDERNAME)

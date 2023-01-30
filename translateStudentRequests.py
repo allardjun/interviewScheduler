@@ -14,7 +14,7 @@ def translateStudentRequests(directoryName):
     # Read in student requests in comma-separated list form
     x1 = pd.read_excel(directoryName + '/forBot_StudentRequestList.xlsx')
 
-    x1['Faculty names'] = x1['Faculty requested']
+    #x1['Faculty names'] = x1['Faculty requested']
 
     for iStudent in x1.index:
         x1['Faculty names'][iStudent] = str(x1['Faculty requested'][iStudent])#  + str(x1['Faculty suggestions'][iStudent]) 
@@ -112,6 +112,6 @@ def translateStudentRequests(directoryName):
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2023Entry/03RecruitmentVisit/PreliminaryData' # EDIT FOLDERNAME HERE
+    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2023Entry/03RecruitmentVisit/2023RealData' # EDIT FOLDERNAME HERE
     #FOLDERNAME = 'SampleData_RealAnon' # EDIT FOLDERNAME HERE
     translateStudentRequests(FOLDERNAME)
