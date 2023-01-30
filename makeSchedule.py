@@ -60,7 +60,7 @@ def makeSchedule(directoryName):
     if visualize:
         listOfTargets = []
 
-    ntmax = int(2e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
+    ntmax = int(5e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
 
     # relative importances of the targets
     alpha = {
@@ -70,12 +70,12 @@ def makeSchedule(directoryName):
         'Requests': 2**6,
         'AsteriskFullness': 0,
         'AsteriskRequests': 2**7,
-        'FacultyFullness' : 2**7,
-        'StudentsCriticallyLow': 2**8
+        'FacultyFullness' : 2**8,
+        'StudentsCriticallyLow': 2**7
     }
 
     tooManyStudentsToAFaculty = 6  # try to make sure each faculty meets no more than this many students
-    criticalNumberOfInterviews = 5  # try to make sure each students meets at least this many faculty
+    criticalNumberOfInterviews = 4  # try to make sure each students meets at least this many faculty
 
 
     # timezones -- UNUSED
@@ -97,7 +97,7 @@ def makeSchedule(directoryName):
 
     def kBT(ntAnneal):
         #return annealingPrefactor * np.power(1 - ntAnneal / float(ntmax+2), 6)
-        number_of_nades = np.log(max(alpha.values())) - np.log(2**6)+3
+        number_of_nades = 3+np.log(max(alpha.values())) - np.log(10**6)+3
         return annealingPrefactor * np.exp( - 12*ntAnneal / float(ntmax+2))
 
     # ---------------- READ INPUT FILES -------------------------------------
@@ -403,6 +403,7 @@ def makeSchedule(directoryName):
             yMin[:] = yPropose
 
             minTargets = proposalTargets.copy()
+            minTargets.E = EPropose
 
         if visualize:
             proposalTargets.E = EPropose
@@ -496,6 +497,10 @@ def makeSchedule(directoryName):
             print('%s = on average %3.0f%%, at worst %3.0f%%' % (iTarget[0], 100*getattr(minTargets,iTarget[0])['mean'], 100*getattr(minTargets,iTarget[0])['min']))
         else:
             print('%s = %3.2f' % (iTarget[0], getattr(minTargets,iTarget[0])))
+
+
+    print('Total number of meetings offered by faculty:' + str(sum(maxNumberOfMeetings)))
+    print('Total number of student meetings:' + str(np.count_nonzero(yMin != -1)))
 
 
     # ---------------- VISUALIZE ANNEALING ----------------------------------
