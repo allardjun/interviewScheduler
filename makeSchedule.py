@@ -60,7 +60,7 @@ def makeSchedule(directoryName):
     if visualize:
         listOfTargets = []
 
-    ntmax = int(2e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
+    ntmax = int(1e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
 
     # relative importances of the targets
     alpha = {

@@ -1,0 +1,64 @@
+schedule code ("mySeed"): 5
+['Jun Allard', 'Steven Allison', 'Lee Bardwell', 'Kevin Beier', 'Veronica Berrocal', 'Elliot Botvinick', 'Naomi  Chesler', 'Ken Cho', 'Bernard Choi', 'Liz Chrastil', 'Fangyuan Ding', 'Anya Grosberg', 'Ryan Hayes', 'Wayne Hayes', 'Barbara Jusiak', 'Evgeny Kvon', 'Arthur Lander', 'Devon Lawson', 'Wei Li', 'Chang Liu', 'John Lowengrub', 'Ray Luo', 'Chris Miles', 'Volodymyr Minin', 'Eric Mjolsness', 'Qing Nie', 'Trina Norden-Krichmar', 'Jose Ranz', 'Elizabeth Read', 'Alejandra Rodriguez-Verdugo', 'Thomas Schilling', 'Marcus Seldin', 'Weining Shen', 'Xiaoyu Shi', 'Albert Siryaporn', 'Craig Stark', 'Vivek Swarup', 'Katherine Thompson-Peer', 'Jack Xin', 'Alvin Yu', 'Jin Yu', 'Jing Zhang']
+['Jun Allard', 'Steven Allison', 'Lee Bardwell', 'Kevin Beier', 'Veronica Berrocal', 'Elliot Botvinick', 'Naomi  Chesler', 'Ken Cho', 'Bernard Choi', 'Liz Chrastil', 'Fangyuan Ding', 'Anya Grosberg', 'Ryan Hayes', 'Wayne Hayes', 'Barbara Jusiak', 'Evgeny Kvon', 'Arthur Lander', 'Devon Lawson', 'Wei Li', 'Chang Liu', 'John Lowengrub', 'Ray Luo', 'Chris Miles', 'Volodymyr Minin', 'Eric Mjolsness', 'Qing Nie', 'Trina Norden-Krichmar', 'Jose Ranz', 'Elizabeth Read', 'Alejandra Rodriguez-Verdugo', 'Thomas Schilling', 'Marcus Seldin', 'Weining Shen', 'Xiaoyu Shi', 'Albert Siryaporn', 'Craig Stark', 'Vivek Swarup', 'Katherine Thompson-Peer', 'Jack Xin', 'Alvin Yu', 'Jin Yu', 'Jing Zhang']
+['Jun Allard', 'Steven Allison', 'Lee Bardwell', 'Kevin Beier', 'Veronica Berrocal', 'Elliot Botvinick', 'Naomi  Chesler', 'Ken Cho', 'Bernard Choi', 'Liz Chrastil', 'Fangyuan Ding', 'Anya Grosberg', 'Ryan Hayes', 'Wayne Hayes', 'Barbara Jusiak', 'Evgeny Kvon', 'Arthur Lander', 'Devon Lawson', 'Wei Li', 'Chang Liu', 'John Lowengrub', 'Ray Luo', 'Chris Miles', 'Volodymyr Minin', 'Eric Mjolsness', 'Qing Nie', 'Trina Norden-Krichmar', 'Jose Ranz', 'Elizabeth Read', 'Alejandra Rodriguez-Verdugo', 'Thomas Schilling', 'Marcus Seldin', 'Weining Shen', 'Xiaoyu Shi', 'Albert Siryaporn', 'Craig Stark', 'Vivek Swarup', 'Katherine Thompson-Peer', 'Jack Xin', 'Alvin Yu', 'Jin Yu', 'Jing Zhang']
+Number of faculty: 42
+Jun Allard can meet 6 students
+Steven Allison can meet 3.0 students
+Lee Bardwell can meet 2.0 students
+Kevin Beier can meet 4.0 students
+Veronica Berrocal can meet 3.0 students
+Elliot Botvinick can meet 1.0 students
+Naomi  Chesler can meet 3.0 students
+Ken Cho can meet 3.0 students
+Bernard Choi can meet 1.0 students
+Liz Chrastil can meet 2.0 students
+Fangyuan Ding can meet 2.0 students
+Anya Grosberg can meet 4.0 students
+Ryan Hayes can meet 3.0 students
+Wayne Hayes can meet 4.0 students
+Barbara Jusiak can meet 3.0 students
+Evgeny Kvon can meet 3.0 students
+Arthur Lander can meet 6 students
+Devon Lawson can meet 2.0 students
+Wei Li can meet 6 students
+Chang Liu can meet 3.0 students
+John Lowengrub can meet 4.0 students
+Ray Luo can meet 2.0 students
+Chris Miles can meet 3.0 students
+Volodymyr Minin can meet 4.0 students
+Eric Mjolsness can meet 5.0 students
+Qing Nie can meet 4.0 students
+Trina Norden-Krichmar can meet 3.0 students
+Jose Ranz can meet 4.0 students
+Elizabeth Read can meet 3.0 students
+Alejandra Rodriguez-Verdugo can meet 2.0 students
+Thomas Schilling can meet 3.0 students
+Marcus Seldin can meet 4.0 students
+Weining Shen can meet 4.0 students
+Xiaoyu Shi can meet 3.0 students
+Albert Siryaporn can meet 4.0 students
+Craig Stark can meet 3.0 students
+Vivek Swarup can meet 4.0 students
+Katherine Thompson-Peer can meet 3.0 students
+Jack Xin can meet 4.0 students
+Alvin Yu can meet 4.0 students
+Jin Yu can meet 6 students
+Jing Zhang can meet 3.0 students
+Keegan, Abiageal Rose (Abbey) no requests satisfied
+Ma, Yanzhe no requests satisfied
+Xu, Ke no requests satisfied
+Zanussi, Jacy Thor no requests satisfied
+E = -412.39
+numberTimezoneViolations = 0.00
+fractionGenderedMeeting = 1.00
+facultyExcessMeetings = 0.00
+numStudentsCriticallyLow = 1.00
+FractionAsteriskFull = on average  50%, at worst   0%
+FractionOfAsteriskRequestSatisfied = on average  91%, at worst   0%
+FractionFull = on average  50%, at worst   0%
+FractionOfRequestSatisfied = on average  52%, at worst   0%
+numStudentsNotMeetingAnyRequested = 4.00
+numTreks = on average   1, at worst   3
+Total number of meetings offered by faculty:143.0
+Total number of student meetings:124

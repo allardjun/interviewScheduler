@@ -54,5 +54,7 @@ To run,
 
 ## Wishlist/todo
 
-* Create campus zones so the student schedules minimize walking.
+* [x] Create campus zones so the student schedules minimize walking.
+* Campus zones use a number code. Switch to meaningful names
+* Issue with multi-space names like Rodriguez Verdugo
 

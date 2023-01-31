@@ -34,8 +34,8 @@ def translateStudentRequests(directoryName):
     missingFacultyCounts = []
 
     # Uncomment for Excel file with student names split in two columns
-    #studentNames = x1['Last name'] + ', ' + x1['First name']
-    studentNames = x1['Last Name']
+    studentNames = x1['Last Name'] + ', ' + x1['First Name']
+    #studentNames = x1['Last Name']
 
     studentChoices_Clean = pd.DataFrame(index=studentNames, columns=['wngbngd', 'asterisk', 'Faculty requested', 'Faculty suggestions', 'Faculty names'])
 
