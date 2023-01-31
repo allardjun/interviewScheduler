@@ -1,0 +1,22 @@
+schedule code ("mySeed"): 20
+Number of faculty: 42
+Iyer, Vignesh Hariharan no requests satisfied
+Keegan, Abiageal Rose (Abbey) no requests satisfied
+Li, Lanting no requests satisfied
+Liu, Yutian no requests satisfied
+Marcus, Austin Michael no requests satisfied
+Poordian, Shayan no requests satisfied
+Yang, Zhishun no requests satisfied
+E = -1997.59
+numberTimezoneViolations = 0.00
+fractionGenderedMeeting = 0.86
+facultyExcessMeetings = 0.00
+numStudentsCriticallyLow = 1.00
+FractionAsteriskFull = on average  55%, at worst   0%
+FractionOfAsteriskRequestSatisfied = on average 100%, at worst   0%
+FractionFull = on average  50%, at worst   0%
+FractionOfRequestSatisfied = on average  40%, at worst   0%
+numStudentsNotMeetingAnyRequested = 7.00
+numTreks = on average   2, at worst   3
+Total number of meetings offered by faculty:143
+Total number of student meetings:124

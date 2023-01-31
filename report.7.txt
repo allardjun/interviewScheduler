@@ -1,0 +1,24 @@
+schedule code ("mySeed"): 7
+Number of faculty: 42
+Candib, Alec Michael no requests satisfied
+Henroid, Bryce no requests satisfied
+Krishnan, Arvind no requests satisfied
+Larson, Natalie no requests satisfied
+Li, Lanting no requests satisfied
+Lydon, Sara Marie no requests satisfied
+Ma, Yanzhe no requests satisfied
+Xu, Ke no requests satisfied
+Yang, Zhishun no requests satisfied
+E = -1640.09
+numberTimezoneViolations = 0.00
+fractionGenderedMeeting = 1.00
+facultyExcessMeetings = 0.00
+numStudentsCriticallyLow = 1.00
+FractionAsteriskFull = on average  55%, at worst   0%
+FractionOfAsteriskRequestSatisfied = on average 100%, at worst   0%
+FractionFull = on average  50%, at worst   0%
+FractionOfRequestSatisfied = on average  31%, at worst   0%
+numStudentsNotMeetingAnyRequested = 9.00
+numTreks = on average   3, at worst   4
+Total number of meetings offered by faculty:143
+Total number of student meetings:124

@@ -1,0 +1,19 @@
+schedule code ("mySeed"): 21
+Number of faculty: 42
+Keegan, Abiageal Rose (Abbey) no requests satisfied
+Larson, Natalie no requests satisfied
+Li, Lanting no requests satisfied
+Ma, Yanzhe no requests satisfied
+E = -1665.99
+numberTimezoneViolations = 0.00
+fractionGenderedMeeting = 1.00
+facultyExcessMeetings = 0.00
+numStudentsCriticallyLow = 1.00
+FractionAsteriskFull = on average  50%, at worst   0%
+FractionOfAsteriskRequestSatisfied = on average  91%, at worst   0%
+FractionFull = on average  50%, at worst   0%
+FractionOfRequestSatisfied = on average  49%, at worst   0%
+numStudentsNotMeetingAnyRequested = 4.00
+numTreks = on average   2, at worst   3
+Total number of meetings offered by faculty:143
+Total number of student meetings:124

@@ -1,0 +1,17 @@
+schedule code ("mySeed"): 12
+Number of faculty: 42
+Li, Lanting no requests satisfied
+Marcus, Austin Michael no requests satisfied
+E = -2063.09
+numberTimezoneViolations = 0.00
+fractionGenderedMeeting = 1.00
+facultyExcessMeetings = 0.00
+numStudentsCriticallyLow = 1.00
+FractionAsteriskFull = on average  55%, at worst   0%
+FractionOfAsteriskRequestSatisfied = on average 100%, at worst   0%
+FractionFull = on average  50%, at worst   0%
+FractionOfRequestSatisfied = on average  57%, at worst   0%
+numStudentsNotMeetingAnyRequested = 2.00
+numTreks = on average   2, at worst   3
+Total number of meetings offered by faculty:143
+Total number of student meetings:124

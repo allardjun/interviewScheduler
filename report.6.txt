@@ -1,0 +1,27 @@
+schedule code ("mySeed"): 6
+Number of faculty: 42
+Chen, Yiwen no requests satisfied
+Keegan, Abiageal Rose (Abbey) no requests satisfied
+Larson, Natalie no requests satisfied
+Li, Lanting no requests satisfied
+Ma, Yanzhe no requests satisfied
+Marcus, Austin Michael no requests satisfied
+Parker, Dylan no requests satisfied
+Tith , Rany no requests satisfied
+Xella, Agata no requests satisfied
+Xu, Qingru no requests satisfied
+Yang, Zhishun no requests satisfied
+Zanussi, Jacy Thor no requests satisfied
+E = -1642.14
+numberTimezoneViolations = 0.00
+fractionGenderedMeeting = 1.00
+facultyExcessMeetings = 0.00
+numStudentsCriticallyLow = 1.00
+FractionAsteriskFull = on average  55%, at worst   0%
+FractionOfAsteriskRequestSatisfied = on average 100%, at worst   0%
+FractionFull = on average  50%, at worst   0%
+FractionOfRequestSatisfied = on average  28%, at worst   0%
+numStudentsNotMeetingAnyRequested = 11.00
+numTreks = on average   3, at worst   4
+Total number of meetings offered by faculty:143
+Total number of student meetings:124

@@ -60,7 +60,7 @@ def makeSchedule(directoryName):
     if visualize:
         listOfTargets = []
 
-    ntmax = int(5e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
+    ntmax = int(2e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
 
     # relative importances of the targets
     alpha = {
@@ -497,7 +497,7 @@ def makeSchedule(directoryName):
                     yNames[iTimeslot,0] = "..."
                 else:
                     yNames[iTimeslot,0] = facultyNames[int(y[iTimeslot, iStudent])]
-                    yNames[iTimeslot,1] = dfFacultyAttributes.iloc[int(y[iTimeslot, iStudent])].loc['Office Location']
+                    yNames[iTimeslot,1] = dfFacultyAttributes.iloc[int(y[iTimeslot, iStudent])].loc['Office Location'] + ', ' + str(dfFacultyAttributes.iloc[int(y[iTimeslot, iStudent])].loc['Office Phone Number'])
             sheetName = studentNames[iStudent].replace(" ", "").replace("(", "").replace(")", "")
             pd.DataFrame(data=yNames, index=timeslotNames, columns=[studentNames[iStudent], "Location"]
                 ).to_excel(writer,sheet_name=sheetName)
