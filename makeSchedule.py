@@ -60,17 +60,17 @@ def makeSchedule(directoryName):
     if visualize:
         listOfTargets = []
 
-    ntmax = int(1e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
+    ntmax = int(5e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
 
     # relative importances of the targets
     alpha = {
         'Timezone': 2**5,
         'Gender': 2**5,
         'Fullness': 2**6,
-        'Requests': 2**6,
+        'Requests': 2**8,
         'AsteriskFullness': 0,
-        'AsteriskRequests': 2**7,
-        'FacultyFullness' : 2**8,
+        'AsteriskRequests': 2**8,
+        'FacultyFullness' : 2**9,
         'StudentsCriticallyLow': 2**7,
         'Treks': 2**5
     }
@@ -120,8 +120,8 @@ def makeSchedule(directoryName):
     dfFacultyAttributes['Faculty name'] = facultyList
 
     # assertion test
-    print(list(dfFacultyAttributes['Faculty name']))
-    print(list(dfFacultyAvailability.columns))
+    #print(list(dfFacultyAttributes['Faculty name']))
+    #print(list(dfFacultyAvailability.columns))
     if not all(dfFacultyAttributes['Faculty name'] == list(dfFacultyAvailability.columns)):
         # this should always pass, since the above file was made automatically
         raise Exception('The faculty names in the xlsx files do not match.')
@@ -140,7 +140,7 @@ def makeSchedule(directoryName):
     facultyNames = list(dfFacultyAvailability.columns)
     #facultyNames.pop(0)
     numFaculty = len(facultyNames)
-    print(facultyNames)
+    #print(facultyNames)
 
     print('Number of faculty: ' +str(numFaculty))
 
@@ -152,7 +152,7 @@ def makeSchedule(directoryName):
     #print(dfFacultyAttributes['Max number of students'])
     maxNumberOfMeetings[:] = [tooManyStudentsToAFaculty if (x==0 or x>tooManyStudentsToAFaculty) else x for x in maxNumberOfMeetings]
     # debugging
-    print("\n".join("{} can meet {} students".format(x, y) for x, y in zip(facultyNames, maxNumberOfMeetings)))
+    #print("\n".join("{} can meet {} students".format(x, y) for x, y in zip(facultyNames, maxNumberOfMeetings)))
 
     timeslotNames = dfFacultyAvailability.index
     # Make nicer timeslot names from another excel file.
