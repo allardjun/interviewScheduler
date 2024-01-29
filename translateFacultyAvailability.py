@@ -13,7 +13,8 @@ def translateFacultyAvailability(directoryName):
     from fuzzywuzzy import process
 
     # Read in student requests in comma-separated list form
-    x1 = pd.read_excel(directoryName + '/forBot_FacultyAvailabilitySurvey.xlsx')
+    x1 = pd.read_excel(directoryName + '/forBot_FacultyAvailabilitySurvey.xlsx', engine='openpyxl')
+
 
     #print(x1)
     facultyList_df = x1[['First Name', 'Last Name','W','Max number of students', 'Campus Zone']]
@@ -87,11 +88,11 @@ def translateFacultyAvailability(directoryName):
     # print(facultyList_df)
 
     # write to excel file
-    availabilityMatrixDataFrame.fillna(0).to_excel(directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx')
+    availabilityMatrixDataFrame.fillna(0).to_excel(directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx', engine='openpyxl')
 
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2023Entry/03RecruitmentVisit/2023RealData' # EDIT FOLDERNAME HERE
+    FOLDERNAME = '/Volumes/Carrot/Dropbox/science/service/MCSB/Admissions/2023Entry/03RecruitmentVisit/2023RealData' # EDIT FOLDERNAME HERE
     #FOLDERNAME = 'SampleData_RealAnon'
     translateFacultyAvailability(FOLDERNAME)

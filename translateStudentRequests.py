@@ -112,6 +112,6 @@ def translateStudentRequests(directoryName):
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2023Entry/03RecruitmentVisit/2023RealData' # EDIT FOLDERNAME HERE
+    FOLDERNAME = '/Volumes/Carrot/Dropbox/science/service/MCSB/Admissions/2023Entry/03RecruitmentVisit/2023RealData' # EDIT FOLDERNAME HERE
     #FOLDERNAME = 'SampleData_RealAnon' # EDIT FOLDERNAME HERE
     translateStudentRequests(FOLDERNAME)
