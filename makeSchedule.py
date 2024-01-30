@@ -42,6 +42,7 @@ def makeSchedule(directoryName):
     import matplotlib.pyplot as plt
     from fuzzywuzzy import fuzz
     from fuzzywuzzy import process
+    import time
 
     # ---------------- OPTIONS AND PARAMETERS -------------------------------
 
@@ -51,7 +52,7 @@ def makeSchedule(directoryName):
         subdirectoryName = '/' + sys.argv[1]
         os.system("mkdir " + directoryName + subdirectoryName)
     else:
-        mySeed = np.random.randint(40)
+        mySeed = int(time.time())#np.random.randint(40)
         subdirectoryName = ''
     np.random.seed(mySeed)
     print("schedule code (\"mySeed\"): " + str(mySeed))
@@ -60,7 +61,7 @@ def makeSchedule(directoryName):
     if visualize:
         listOfTargets = []
 
-    ntmax = int(2e4) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
+    ntmax = int(2e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
 
     # relative importances of the targets
     alpha = {
@@ -71,7 +72,7 @@ def makeSchedule(directoryName):
         'AsteriskFullness': 0,
         'AsteriskRequests': 2**8,
         'FacultyFullness' : 2**9,
-        'StudentsCriticallyLow': 2**7,
+        'StudentsCriticallyLow': 2**6,
         'Treks': 2**5
     }
 
@@ -89,8 +90,8 @@ def makeSchedule(directoryName):
 
     # day
     slotsInDay = {
-        'Mon':range(0,4),
-        'Tue':range(5,9),
+        'Mon':[0,1,2,3,4],
+        'Tue':[5,6,7,8],
     }
 
     # Temperature function aka Annealing function.
@@ -112,22 +113,24 @@ def makeSchedule(directoryName):
     dfFacultySurvey = pd.read_excel(directoryName + '/forBot_FacultyAvailabilitySurvey.xlsx').fillna(0)
     dfFacultySurvey['Last Name'] = dfFacultySurvey['Name'].apply(lambda name: name.split(' ')[-1])
     dfFacultySurvey.sort_values(by=['Last Name', 'Name'], inplace=True)
-    print(dfFacultySurvey)
+    #print(dfFacultySurvey)
 
     #dfFacultyAttributes = dfFacultySurvey[['First Name','Last Name', 'W','Max number of students','Office Location','Office Phone Number','Campus Zone']].reset_index()
-    dfFacultyAttributes = dfFacultySurvey[['Name', 'W','Max number of students','Office Location','Office Phone Number','Campus Zone']]
-    print(dfFacultyAttributes)
+    dfFacultyAttributes = dfFacultySurvey[['Name', 'W','Max number of students','Office Location','Office Phone Number','Campus Zone']].copy()
+    #print(dfFacultyAttributes)
 
 
     # facultyList = functools.reduce(lambda res, l: res + [l[0] + " " + l[1]], zip(list(dfFacultyAttributes['First Name']),list(dfFacultyAttributes['Last Name'])), [])
     # for iFaculty in range(len(facultyList)):
     #     facultyList[iFaculty] = facultyList[iFaculty].lstrip().rstrip()
     #print(dfFacultyAttributes)
-    dfFacultyAttributes['Faculty name'] = dfFacultySurvey['Name']
+    #dfFacultyAttributes['Faculty name'] = dfFacultyAttributes['Name']
+    dfFacultyAttributes.loc[:,'Faculty name'] = dfFacultyAttributes['Name']
+
 
     # assertion test
-    print(list(dfFacultyAttributes['Faculty name']))
-    print(list(dfFacultyAvailability.columns))
+    # print(list(dfFacultyAttributes['Faculty name']))
+    # print(list(dfFacultyAvailability.columns))
     if not all(dfFacultyAttributes['Faculty name'] == list(dfFacultyAvailability.columns)):
         # this should always pass, since the above file was made automatically
         raise Exception('The faculty names in the xlsx files do not match.')
@@ -139,6 +142,7 @@ def makeSchedule(directoryName):
     # print(dfFacultyAttributes)
     # facultyLastNames = list(dfFacultyAttributes['Last Name'])
     
+    #print(dfFacultyAvailability)
 
     #dfFacultyAvailability.drop(dfFacultyAvailability.head(2).index, inplace=True)
     boolFacultyAvailability = np.nan_to_num(dfFacultyAvailability.to_numpy())
@@ -156,15 +160,20 @@ def makeSchedule(directoryName):
 
     maxNumberOfMeetings = list(dfFacultyAttributes['Max number of students'])
     #print(dfFacultyAttributes['Max number of students'])
-    maxNumberOfMeetings[:] = [tooManyStudentsToAFaculty if (x==0 or x>tooManyStudentsToAFaculty) else x for x in maxNumberOfMeetings]
+    #maxNumberOfMeetings[:] = [tooManyStudentsToAFaculty if (x==0 or x>tooManyStudentsToAFaculty) else x for x in maxNumberOfMeetings]
+    maxNumberOfMeetings[:] = [tooManyStudentsToAFaculty if (x==0) else x for x in maxNumberOfMeetings]
     # debugging
-    #print("\n".join("{} can meet {} students".format(x, y) for x, y in zip(facultyNames, maxNumberOfMeetings)))
+    print("\n".join("{} can meet {} students".format(x, y) for x, y in zip(facultyNames, maxNumberOfMeetings)))
 
     timeslotNames = dfFacultyAvailability.index
     # Make nicer timeslot names from another excel file.
     dfTimeslotNames = pd.read_excel(directoryName + '/forBot_timeslotNames.xlsx').fillna(0)
     timeslotNames = dfTimeslotNames['Timeslot name']
     numTimeslots = len(timeslotNames)
+
+    # print(numTimeslots)
+    # print(timeslotNames)
+    # print(slotsInDay['Mon'])
 
     facultyCampusZone = list(dfFacultyAttributes['Campus Zone'])
 
@@ -173,8 +182,8 @@ def makeSchedule(directoryName):
     # --------------- Get student requests
     dfStudentRequests = pd.read_excel(directoryName + '/forBot_StudentRequestsMatrix.xlsx', index_col=0).fillna(0)
 
-    print(dfFacultyAvailability.columns)
-    print(dfStudentRequests.columns)
+    #print(dfFacultyAvailability.columns)
+    #print(dfStudentRequests.columns)
     if not all(dfFacultyAvailability.columns == dfStudentRequests.columns):
         raise Exception('The faculty names in the xlsx files do not match.')
 
