@@ -60,7 +60,7 @@ def makeSchedule(directoryName):
     if visualize:
         listOfTargets = []
 
-    ntmax = int(2e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
+    ntmax = int(2e4) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
 
     # relative importances of the targets
     alpha = {
@@ -109,19 +109,25 @@ def makeSchedule(directoryName):
 
     dfFacultyAvailability = pd.read_excel(directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx', index_col=0).fillna(0)
 
-    dfFacultySurvey = pd.read_excel(directoryName + '/forBot_FacultyAvailabilitySurvey.xlsx', index_col=0).fillna(0)
-    dfFacultySurvey.sort_values(by=['Last Name', 'First Name'], inplace=True)
-    dfFacultyAttributes = dfFacultySurvey[['First Name','Last Name', 'W','Max number of students','Office Location','Office Phone Number','Campus Zone']].reset_index()
-    #print(dfFacultyAttributes)
+    dfFacultySurvey = pd.read_excel(directoryName + '/forBot_FacultyAvailabilitySurvey.xlsx').fillna(0)
+    dfFacultySurvey['Last Name'] = dfFacultySurvey['Name'].apply(lambda name: name.split(' ')[-1])
+    dfFacultySurvey.sort_values(by=['Last Name', 'Name'], inplace=True)
+    print(dfFacultySurvey)
 
-    facultyList = functools.reduce(lambda res, l: res + [l[0] + " " + l[1]], zip(list(dfFacultyAttributes['First Name']),list(dfFacultyAttributes['Last Name'])), [])
-    for iFaculty in range(len(facultyList)):
-        facultyList[iFaculty] = facultyList[iFaculty].lstrip().rstrip()
-    dfFacultyAttributes['Faculty name'] = facultyList
+    #dfFacultyAttributes = dfFacultySurvey[['First Name','Last Name', 'W','Max number of students','Office Location','Office Phone Number','Campus Zone']].reset_index()
+    dfFacultyAttributes = dfFacultySurvey[['Name', 'W','Max number of students','Office Location','Office Phone Number','Campus Zone']]
+    print(dfFacultyAttributes)
+
+
+    # facultyList = functools.reduce(lambda res, l: res + [l[0] + " " + l[1]], zip(list(dfFacultyAttributes['First Name']),list(dfFacultyAttributes['Last Name'])), [])
+    # for iFaculty in range(len(facultyList)):
+    #     facultyList[iFaculty] = facultyList[iFaculty].lstrip().rstrip()
+    #print(dfFacultyAttributes)
+    dfFacultyAttributes['Faculty name'] = dfFacultySurvey['Name']
 
     # assertion test
-    #print(list(dfFacultyAttributes['Faculty name']))
-    #print(list(dfFacultyAvailability.columns))
+    print(list(dfFacultyAttributes['Faculty name']))
+    print(list(dfFacultyAvailability.columns))
     if not all(dfFacultyAttributes['Faculty name'] == list(dfFacultyAvailability.columns)):
         # this should always pass, since the above file was made automatically
         raise Exception('The faculty names in the xlsx files do not match.')
@@ -167,8 +173,8 @@ def makeSchedule(directoryName):
     # --------------- Get student requests
     dfStudentRequests = pd.read_excel(directoryName + '/forBot_StudentRequestsMatrix.xlsx', index_col=0).fillna(0)
 
-    #print(dfFacultyAvailability.columns)
-    #print(dfStudentRequests.columns)
+    print(dfFacultyAvailability.columns)
+    print(dfStudentRequests.columns)
     if not all(dfFacultyAvailability.columns == dfStudentRequests.columns):
         raise Exception('The faculty names in the xlsx files do not match.')
 
@@ -306,7 +312,7 @@ def makeSchedule(directoryName):
         # TARGET: Asterisk students get full schedules
         fractionAsteriskFull = sum(yPropose[:, studentAsteriskList] != -1) / float(numTimeslots)
         proposalTargets.FractionAsteriskFull["min"] = min(fractionAsteriskFull)
-        proposalTargets.FractionAsteriskFull["mean"] = sum(fractionAsteriskFull) / float(numAsterisks)
+        proposalTargets.FractionAsteriskFull["mean"] = sum(fractionAsteriskFull) / float(numAsterisks+1)
 
         # TARGET: All students get requested faculty
         numStudentsNotMeetingAnyRequested = 0
@@ -587,6 +593,6 @@ class Targets:
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '~/Dropbox/science/service/MCSB/Admissions/2023Entry/03RecruitmentVisit/2023RealData'  # EDIT FOLDERNAME HERE
+    FOLDERNAME = '/Volumes/Carrot/Dropbox/science/service/MCSB/Admissions/2024Entry/03RecruitmentVisit/2024RealData'  # EDIT FOLDERNAME HERE
     #FOLDERNAME = 'SampleData_RealAnon'
     makeSchedule(FOLDERNAME)

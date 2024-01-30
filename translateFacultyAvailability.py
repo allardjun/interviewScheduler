@@ -17,18 +17,19 @@ def translateFacultyAvailability(directoryName):
 
 
     #print(x1)
-    facultyList_df = x1[['First Name', 'Last Name','W','Max number of students', 'Campus Zone']]
-    facultyList = facultyList_df['First Name'] + ' ' + facultyList_df['Last Name']
+    facultyList_df = x1[['Name','W','Max number of students', 'Campus Zone']]
+    #facultyList = facultyList_df['First Name'] + ' ' + facultyList_df['Last Name']
+    facultyList = facultyList_df['Name']
     print(facultyList_df)
     for iFaculty in range(len(facultyList)):
         facultyList[iFaculty] = facultyList[iFaculty].lstrip().rstrip()
 
     print(facultyList) # note these are e-mails right now. Need to manually change to names.
 
-    stringOfAvailableSlots = x1['I am available to interview students during the following time slots:']
+    stringOfAvailableSlots = x1['Please select the time slots you are available to interview prospective students.']
 
-    stringOfAvailableSlots_all = '2/6 1:00 - 1:30; 2/6 1:45 - 2:15; 2/6 2:30 - 3:00; 2/6 3:15 - 3:45; 2/6 4:00 - 4:30; 2/7 1:00 - 1:30; 2/7 1:45 - 2:15; 2/7 2:30 - 3:00; 2/7 3:15 - 3:45; 2/7 4:00 - 4:30; '
-    stringOfAvailableSlots_all_with_transit = '2/6 1:00 - 1:45;2/6 1:45 - 2:30;2/6 2:30 - 3:15;2/6 3:15 - 4:00;2/6 4:00 - 4:45;2/7 1:00 - 1:45;2/7 1:45 - 2:30;2/7 2:30 - 3:15;2/7 3:15 - 4:00;2/7 4:00 - 4:45;'
+    stringOfAvailableSlots_all = '2/5 - 1:00 - 1:40 pm;2/5 - 1:45 - 2:15 pm;2/5 - 2:30 - 3:00 pm;2/5 - 3:15 - 3:45 pm;2/5 - 4:00 - 4:30 pm;2/6 - 1:00 - 1:30 pm;2/6 - 1:45 - 2:15 pm;2/6 - 2:30 - 3:00 pm;2/6 - 3:15 - 3:45 pm;'
+    stringOfAvailableSlots_all_with_transit = '2/5 - 1:00 - 1:45 pm;2/5 - 1:45 - 2:30 pm;2/5 - 2:30 - 3:15 pm;2/5 - 3:15 - 4:00 pm;2/5 - 4:00 - 4:45 pm;2/6 - 1:00 - 1:45 pm;2/6 - 1:45 - 2:30 pm;2/6 - 2:30 - 3:15 pm;2/6 - 3:15 - 4:00 pm;'
     slots = stringOfAvailableSlots_all.split(';')
     slots_with_transit = stringOfAvailableSlots_all_with_transit.split(';')
     tmp = []
@@ -93,6 +94,6 @@ def translateFacultyAvailability(directoryName):
 
 if __name__ == '__main__':
     # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '/Volumes/Carrot/Dropbox/science/service/MCSB/Admissions/2023Entry/03RecruitmentVisit/2023RealData' # EDIT FOLDERNAME HERE
+    FOLDERNAME = '/Volumes/Carrot/Dropbox/science/service/MCSB/Admissions/2024Entry/03RecruitmentVisit/2024RealData' # EDIT FOLDERNAME HERE
     #FOLDERNAME = 'SampleData_RealAnon'
     translateFacultyAvailability(FOLDERNAME)
