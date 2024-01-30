@@ -19,7 +19,7 @@ def translateFacultyAvailability(directoryName):
     #print(x1)
     facultyList_df = x1[['Name','W','Max number of students', 'Campus Zone']]
     #facultyList = facultyList_df['First Name'] + ' ' + facultyList_df['Last Name']
-    facultyList = facultyList_df['Name']
+    facultyList = facultyList_df['Name'].copy()
     print(facultyList_df)
     for iFaculty in range(len(facultyList)):
         facultyList[iFaculty] = facultyList[iFaculty].lstrip().rstrip()
