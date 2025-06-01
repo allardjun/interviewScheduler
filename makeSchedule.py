@@ -61,7 +61,7 @@ def makeSchedule(directoryName):
     if visualize:
         listOfTargets = []
 
-    ntmax = int(2e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
+    ntmax = int(5e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
 
     # relative importances of the targets
     alpha = {
@@ -77,7 +77,7 @@ def makeSchedule(directoryName):
     }
 
     tooManyStudentsToAFaculty = 6  # try to make sure each faculty meets no more than this many students
-    criticalNumberOfInterviews = 4  # try to make sure each students meets at least this many faculty
+    criticalNumberOfInterviews = 3  # try to make sure each students meets MORE THAN this many faculty
 
 
     # timezones -- UNUSED
