@@ -1,4 +1,4 @@
-def makeSchedule(directoryName):
+def makeSchedule(directoryName, ntmax=int(5e5)):
 
     # Outline of this function
     # ---------------- DEPENDENCIES -----------------------------------------
@@ -61,7 +61,9 @@ def makeSchedule(directoryName):
     if visualize:
         listOfTargets = []
 
-    ntmax = int(5e5) # int(2e4)  # total number of annealing timesteps to run. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU time in 2022; 
+    # ntmax (total number of annealing timesteps) is a parameter; the default of
+    # 5e5 takes ~a few min. 2e5 takes about 2min in 2023; 4e4 takes about 2min CPU
+    # time in 2022. Tests pass a small value for a fast smoke run.
 
     # relative importances of the targets
     alpha = {

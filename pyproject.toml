@@ -15,6 +15,14 @@ dependencies = [
     "python-Levenshtein>=0.23",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 # Only DIRECT runtime dependencies are declared above. Transitive packages
 # (pillow, contourpy, kiwisolver, fonttools, pytz, six, ...) are resolved and
 # pinned automatically in uv.lock. pillow in particular arrives via matplotlib
