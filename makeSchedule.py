@@ -238,8 +238,8 @@ def makeSchedule(directoryName):
 
     proposalTargets = Targets()
 
-    E = np.Inf
-    EMin = np.Inf
+    E = np.inf
+    EMin = np.inf
 
     for nt in range(ntmax):
 

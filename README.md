@@ -7,8 +7,15 @@ MIT License. This software is provided "as is".
 
 ### Installation
 
-Requires python and the following python packages:
-`` numpy, xlsxwriter, sys, matplotlib, pandas, fuzzywuzzy ``
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
+With uv installed, run:
+
+```
+uv sync
+```
+
+This creates a virtual environment (`.venv/`) with all dependencies pinned in
+`uv.lock`. Run any of the scripts below with `uv run python <script>.py`.
 
 ### Input data
 
