@@ -540,11 +540,12 @@ def makeSchedule(directoryName, ntmax=int(5e5)):
 
         for i, iTarget in enumerate(vars(proposalTargets).items(),start=1):
 
-            if isinstance(iTarget[1],dict): # if it's a target with a min and a mean
+            if isinstance(iTarget[1],dict): # if it's a target with a min/worst and a mean
+                extremeKey = 'min' if 'min' in iTarget[1] else 'worst'
                 ax = fig.add_subplot(numberOfPlots, 1, i)
                 ax.title.set_text(iTarget[0])
                 for nt in ntToPlot[::100]:
-                    plt.plot(nt,getattr(listOfTargets[nt],iTarget[0])['worst'], 'xr')
+                    plt.plot(nt,getattr(listOfTargets[nt],iTarget[0])[extremeKey], 'xr')
                     plt.plot(nt,getattr(listOfTargets[nt],iTarget[0])['mean'], 'ob')
             else:
                 ax = fig.add_subplot(numberOfPlots, 1, i)
@@ -561,10 +562,10 @@ class Targets:
         self.fractionGenderedMeeting = 0
         self.facultyExcessMeetings = 0
         self.numStudentsCriticallyLow = 0
-        self.FractionAsteriskFull = {'worst':0, 'mean':0}
-        self.FractionOfAsteriskRequestSatisfied = {'worst':0, 'mean':0}
-        self.FractionFull= {'worst':0, 'mean':0}
-        self.FractionOfRequestSatisfied = {'worst':0, 'mean':0}
+        self.FractionAsteriskFull = {'min':0, 'mean':0}
+        self.FractionOfAsteriskRequestSatisfied = {'min':0, 'mean':0}
+        self.FractionFull= {'min':0, 'mean':0}
+        self.FractionOfRequestSatisfied = {'min':0, 'mean':0}
         self.numStudentsNotMeetingAnyRequested = 0
         self.numTreks = {'worst':0, 'mean':0}
 
@@ -572,7 +573,7 @@ class Targets:
         targetCopy = Targets()
         for iTargetName, iTargetValue in vars(self).items():
             if isinstance(iTargetValue,dict):
-                setattr(targetCopy,iTargetName,{'worst':iTargetValue['worst'], 'mean':iTargetValue['mean']})
+                setattr(targetCopy,iTargetName,dict(iTargetValue))
             else:
                 setattr(targetCopy,iTargetName,iTargetValue)
         return targetCopy
@@ -596,7 +597,7 @@ class Targets:
             if iTarget[0]=='numTreks':
                 print('%s = on average %3.0f, at worst %3.0f' % (iTarget[0], getattr(self,iTarget[0])['mean'], getattr(self,iTarget[0])['worst']))
             elif isinstance(iTarget[1],dict): # if it's a target with a min and a mean
-                print('%s = on average %3.0f%%, at worst %3.0f%%' % (iTarget[0], 100*getattr(self,iTarget[0])['mean'], 100*getattr(self,iTarget[0])['worst']))
+                print('%s = on average %3.0f%%, at worst %3.0f%%' % (iTarget[0], 100*getattr(self,iTarget[0])['mean'], 100*getattr(self,iTarget[0])['min']))
             else:
                 print('%s = %3.2f' % (iTarget[0], getattr(self,iTarget[0])))
 
