@@ -1,0 +1,21 @@
+[project]
+name = "interview-scheduler"
+version = "0.1.0"
+description = "Interview scheduler bot for MCSB PhD recruitment"
+readme = "README.md"
+license = { file = "LICENSE.md" }
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.1",
+    "pandas>=2.2.3",
+    "matplotlib>=3.9",
+    "openpyxl>=3.1",
+    "xlsxwriter>=3.1",
+    "fuzzywuzzy>=0.18",
+    "python-Levenshtein>=0.23",
+]
+
+# Only DIRECT runtime dependencies are declared above. Transitive packages
+# (pillow, contourpy, kiwisolver, fonttools, pytz, six, ...) are resolved and
+# pinned automatically in uv.lock. pillow in particular arrives via matplotlib
+# and no longer needs a direct pin.
