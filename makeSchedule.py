@@ -34,9 +34,7 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
     # ---------------- DEPENDENCIES -----------------------------------------
     # Before using, you need to pip install all of these.
     import xlsxwriter
-    import sys
     import os
-    import functools
     import numpy as np
     import pandas as pd
     import matplotlib.pyplot as plt
@@ -81,13 +79,6 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
     criticalNumberOfInterviews = 3  # try to make sure each students meets MORE THAN this many faculty
 
 
-    # timezones -- UNUSED
-    # slotsInTimezone = {
-    #     'EST':(0,1,2,3,10,11,12,13),
-    #     'PST':(2,3,4,5,6,7,12,13,14,15,16,17), # survey says to ignore the last few slots
-    #     'AP':(6,7,8,9,16,17),
-    #     'India':(2,3,4,5,6,7,12,13,14,15,16,17)
-    # }
 
     # day
     slotsInDay = {
@@ -99,8 +90,6 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
     annealingPrefactor = 2*sum(alpha.values())
 
     def kBT(ntAnneal):
-        #return annealingPrefactor * np.power(1 - ntAnneal / float(ntmax+2), 6)
-        number_of_nades = 3+np.log(max(alpha.values())) - np.log(10**6)+3
         return annealingPrefactor * np.exp( - 12*ntAnneal / float(ntmax+2))
 
     # ---------------- READ INPUT FILES -------------------------------------
@@ -114,44 +103,23 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
     dfFacultySurvey = pd.read_excel(directoryName + '/forBot_FacultyAvailabilitySurvey.xlsx').fillna(0)
     dfFacultySurvey['Last Name'] = dfFacultySurvey['Name'].apply(lambda name: name.split(' ')[-1])
     dfFacultySurvey.sort_values(by=['Last Name', 'Name'], inplace=True)
-    #print(dfFacultySurvey)
 
     #dfFacultyAttributes = dfFacultySurvey[['First Name','Last Name', 'W','Max number of students','Office Location','Office Phone Number','Campus Zone']].reset_index()
     dfFacultyAttributes = dfFacultySurvey[['Name', 'W','Max number of students','Office Location','Office Phone Number','Campus Zone']].copy()
-    #print(dfFacultyAttributes)
 
 
-    # facultyList = functools.reduce(lambda res, l: res + [l[0] + " " + l[1]], zip(list(dfFacultyAttributes['First Name']),list(dfFacultyAttributes['Last Name'])), [])
-    # for iFaculty in range(len(facultyList)):
-    #     facultyList[iFaculty] = facultyList[iFaculty].lstrip().rstrip()
-    #print(dfFacultyAttributes)
-    #dfFacultyAttributes['Faculty name'] = dfFacultyAttributes['Name']
     dfFacultyAttributes.loc[:,'Faculty name'] = dfFacultyAttributes['Name']
 
 
-    # assertion test
-    # print(list(dfFacultyAttributes['Faculty name']))
-    # print(list(dfFacultyAvailability.columns))
     if not all(dfFacultyAttributes['Faculty name'] == list(dfFacultyAvailability.columns)):
         # this should always pass, since the above file was made automatically
         raise Exception('The faculty names in the xlsx files do not match.')
-    # facultyLastNames = list(dfFacultyAttributes['Last Name'])
-    # # for iFaculty in range(len(facultyList)):
-    # #     facultyLastNames.append(facultyList[iFaculty].split(' ')[-1])
-    # dfFacultyAttributes['Last name'] = facultyLastNames
-    # dfFacultyAttributes.sort_values(by=['Last name'], inplace=True)
-    # print(dfFacultyAttributes)
-    # facultyLastNames = list(dfFacultyAttributes['Last Name'])
     
-    #print(dfFacultyAvailability)
 
-    #dfFacultyAvailability.drop(dfFacultyAvailability.head(2).index, inplace=True)
     boolFacultyAvailability = np.nan_to_num(dfFacultyAvailability.to_numpy())
 
     facultyNames = list(dfFacultyAvailability.columns)
-    #facultyNames.pop(0)
     numFaculty = len(facultyNames)
-    #print(facultyNames)
 
     print('Number of faculty: ' +str(numFaculty))
 
@@ -160,10 +128,8 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
     facultyWomenSet = set(facultyWomenList)
 
     maxNumberOfMeetings = list(dfFacultyAttributes['Max number of students'])
-    #print(dfFacultyAttributes['Max number of students'])
     #maxNumberOfMeetings[:] = [tooManyStudentsToAFaculty if (x==0 or x>tooManyStudentsToAFaculty) else x for x in maxNumberOfMeetings]
     maxNumberOfMeetings[:] = [tooManyStudentsToAFaculty if (x==0) else x for x in maxNumberOfMeetings]
-    # debugging
     print("\n".join("{} can meet {} students".format(x, y) for x, y in zip(facultyNames, maxNumberOfMeetings)))
 
     timeslotNames = dfFacultyAvailability.index
@@ -172,9 +138,6 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
     timeslotNames = dfTimeslotNames['Timeslot name']
     numTimeslots = len(timeslotNames)
 
-    # print(numTimeslots)
-    # print(timeslotNames)
-    # print(slotsInDay['Mon'])
 
     facultyCampusZone = list(dfFacultyAttributes['Campus Zone'])
 
@@ -183,8 +146,6 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
     # --------------- Get student requests
     dfStudentRequests = pd.read_excel(directoryName + '/forBot_StudentRequestsMatrix.xlsx', index_col=0).fillna(0)
 
-    #print(dfFacultyAvailability.columns)
-    #print(dfStudentRequests.columns)
     if not all(dfFacultyAvailability.columns == dfStudentRequests.columns):
         raise Exception('The faculty names in the xlsx files do not match.')
 
@@ -216,8 +177,6 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
     for iStudent in range(numStudents):
         slotsForThisStudent = set()
         for day in ('Mon','Tue'):
-            #print(iStudent)
-            #print(day)
             if dfStudentAttributes.iloc[iStudent].loc[day]==1:
                 slotsForThisStudent = slotsForThisStudent | set(slotsInDay[day])
             #slotsForThisStudent = slotsForThisStudent | set(slotsInDay[day]) # just use this line if everyone is here for both days. Otherwise use the two lines above.
@@ -262,11 +221,6 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
                 if facultyAvailableNow:
                     iStudent = np.random.randint(numStudents)
 
-                    # debugging
-                    #if (nt>9617.96693926):
-                    #    print('nt=' + str(nt) + ', kBT(nt)=' + str(kBT(nt)) + ', iFaculty=' + str(iFaculty))
-                    #if (kBT(nt)<2**6) and (iFaculty==0) and (iStudent==0):
-                        #print('nt=' + str(nt) + ', kBT(nt)=' + str(kBT(nt)) + ', iFaculty=' + str(iFaculty) + ', iStudent=' + str(iStudent) + ', iTimeslot=' + str(iTimeslot))
 
                     if iStudent not in xPropose[:, iFaculty]:
                         newStudent = 1
@@ -274,9 +228,6 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
                             timezoneSatisfied = 1
             xPropose[iTimeslot, iFaculty] = iStudent
 
-            #if (nt==8036):
-                #print('nt=' + str(nt) + ', kBT(nt)=' + str(kBT(nt)) + ', iFaculty=' + str(iFaculty) + ', iStudent=' + str(iStudent) + ', iTimeslot=' + str(iTimeslot))
-                #print('xPropose[iTimeslot, iFaculty] =' +  str(xPropose[iTimeslot, iFaculty]))
 
             # --------------- Special accommodations: students with partial schedules
             # Nothing here yet!
@@ -300,9 +251,6 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
             # Nothing here yet!
             hardConstraintSatisfied = 1
 
-            #if (nt==8036):
-                #print('nt=' + str(nt) + ', kBT(nt)=' + str(kBT(nt)) + ', iFaculty=' + str(iFaculty) + ', iStudent=' + str(iStudent) + ', iTimeslot=' + str(iTimeslot))
-                #print('hardConstraintSatisfied =' +  str(hardConstraintSatisfied))
 
         # --------------- Compute targets
 
@@ -368,10 +316,6 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
         for iFaculty in range(numFaculty):
             numMeetings = numTimeslots - sum(xPropose[:, iFaculty] == -1)
 
-            # debugging
-            #if nt==8036 or nt==8034:
-            #    print('nt=' + str(nt) + ', kBT(nt)=' + str(kBT(nt)) + ', iFaculty=' + str(iFaculty) + ', iStudent=' + str(iStudent) + ', iTimeslot=' + str(iTimeslot))
-            #   print('iFaculty=' + str(iFaculty) + 'numMeetings, maxNumberOfMeetings[iFaculty]=' + str(numMeetings) + ', ' +str(maxNumberOfMeetings[iFaculty]))
 
 
             if numMeetings > maxNumberOfMeetings[iFaculty]:#tooManyStudentsToAFaculty:
@@ -407,22 +351,12 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
                                     + proposalTargets.numTreks["mean"] )
         )
 
-        # debugging
-        #if (nt==8036) or (nt==8034):
-            #print('nt=' + str(nt) + ', kBT(nt)=' + str(kBT(nt)) + ', iFaculty=' + str(iFaculty) + ', iStudent=' + str(iStudent) + ', iTimeslot=' + str(iTimeslot))
-            #print('EPropose =' +  str(EPropose) + ', E=' + str(E))
-            #proposalTargets.print()
 
 
         # Boltzmann test
         # Do it as two if statements to avoid runtime overflow.
         if EPropose < E or (np.random.rand() < np.exp(-(EPropose - E) / kBT(nt))):
 
-            # debugging
-            #if (nt>8010 and nt < 8040):
-                #print('nt=' + str(nt))
-                #print('EPropose =' +  str(EPropose) + ', E=' + str(E))
-                #print('I accepted.')
 
             E = EPropose
             x[:] = xPropose
@@ -445,8 +379,6 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
     x[:] = xMin
     y[:] = yMin
 
-    #print(xMin)
-    #print(yMin)
 
     # ---------------- EXPORT TO SPREADSHEETS -----------------------------
     if 1:
@@ -462,9 +394,6 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
                         xNames[iTimeslot, iFaculty] = "open"
                 else:
                     xNames[iTimeslot, iFaculty] = studentNames[int(x[iTimeslot, iFaculty])]
-        #print(xNames)
-        #print(timeslotNames)
-        #print(facultyNames)
 
         pd.DataFrame(data=xNames, index=timeslotNames, columns=facultyNames).to_excel(
             directoryName + subdirectoryName + '/fromBot_FacultySchedules.xlsx')
@@ -579,17 +508,6 @@ class Targets:
 
 
     def print(self):
-        # print('E=' + str(self.E))
-        # print('numberTimezoneViolations=' + str(self.numberTimezoneViolations))
-        # print('fractionGenderedMeeting=' + str(self.fractionGenderedMeeting))
-        # print('facultyExcessMeetings=' + str(self.facultyExcessMeetings))
-        # print('numStudentsCriticallyLow=' + str(self.numStudentsCriticallyLow))
-        # print('FractionAsteriskFull=' + str(self.FractionAsteriskFull))
-        # print('FractionOfAsteriskRequestSatisfied=' + str(self.FractionOfAsteriskRequestSatisfied))
-        # print('FractionFull=' + str(self.FractionFull))
-        # print('FractionOfRequestSatisfied=' + str(self.FractionOfRequestSatisfied))
-        # print('numStudentsNotMeetingAnyRequested=' + str(self.numStudentsNotMeetingAnyRequested))
-        # print('numStudentsNotMeetingAnyRequested=' + str(self.numStudentsNotMeetingAnyRequested))
 
         for i, iTarget in enumerate(vars(self).items(),start=1):
 

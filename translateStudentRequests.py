@@ -13,13 +13,8 @@ def translateStudentRequests(directoryName):
     # Read in student requests in comma-separated list form
     x1 = pd.read_excel(directoryName + '/forBot_StudentRequestList.xlsx')
 
-    #x1['Faculty names'] = x1['Faculty requested']
 
-    #for iStudent in x1.index:
-    #    x1['Faculty names'][iStudent] = str(x1['Faculty requested'][iStudent])#  + str(x1['Faculty suggestions'][iStudent]) 
-    #x1['Faculty names'] = x1['Faculty requests'] #+ x1['Faculty suggestions']
 
-    #print(x1['Faculty names'])
 
     # Read in core faculty list
     xFaculty = pd.read_excel(directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx')
@@ -34,11 +29,8 @@ def translateStudentRequests(directoryName):
 
     # Uncomment for Excel file with student names split in two columns
     studentNames = x1['Last Name'] + ', ' + x1['First Name']
-    #studentNames = x1['Last Name']
 
-    #studentChoices_Clean = pd.DataFrame(index=studentNames, columns=['wngbngd', 'asterisk', 'Faculty requested', 'Faculty suggestions', 'Faculty names'])
 
-    #studentChoices_Clean = pd.DataFrame(index=studentNames, columns=['wngbngd', 'asterisk', 'Faculty 1', 'Faculty suggestions'])
 
     studentChoices_Clean = list()
 
@@ -46,7 +38,6 @@ def translateStudentRequests(directoryName):
 
         print(x1.iloc[iStudent]['Faculty 1'])
         if not isinstance(x1.iloc[iStudent]['Faculty 1'],float):
-            #thisStudentChoices = x1.iloc[iStudent]['Faculty names'].replace('\xa0', '').replace(', and ', ', ').replace(' and ', ', ').replace('Dr.', '').replace('Dr. ', '').replace('Professor ', '').replace('Prof.', '').replace('Prof. ', '').replace('.', '').split(',')
 
             row = x1.iloc[iStudent]
             thisStudentChoices = [row[f'Faculty {i}'] for i in range(1, 7) if pd.notna(row[f'Faculty {i}'])]
@@ -68,9 +59,6 @@ def translateStudentRequests(directoryName):
                     missingFacultyList.append(facultyName)
                     missingFacultyCounts.append(1)
                 else:
-                    #print(missingFacultyCounts)
-                    #print(type(missingFacultyCounts))
-                    #print(fuzzyCompare)
                     missingFacultyCounts[missingFacultyList.index(fuzzyCompare[0])] = missingFacultyCounts[missingFacultyList.index(fuzzyCompare[0])]+1
 
             else:
@@ -79,12 +67,9 @@ def translateStudentRequests(directoryName):
             thisStudentChoices_Clean.append(facultyName)
 
         print(thisStudentChoices_Clean)
-        #studentChoices_Clean.iloc[iStudent]['Faculty names'] = thisStudentChoices_Clean # breaking change coming in Pandas 3.0
         studentChoices_Clean.append(thisStudentChoices_Clean)
 
     # sort list by last name
-    #facultyListSorted = sorted(facultyList, key=lambda x: x.split(" ")[-1])
-    #facultyListSorted = facultyList#sorted(facultyList, key=lambda x: x.split(" ")[-1])
     facultyList_LastNameFirst = []
     for facultyName in facultyList:
         indivNames = facultyName.split(' ')
@@ -111,9 +96,6 @@ def translateStudentRequests(directoryName):
             print(f"iStudent={iStudent}, iFaculty={iFaculty}, ", end="")
             if iFaculty in facultyList_Sorted:
                 print("scheduled")
-                #studentChoices_matrix.loc[iStudent,iFaculty] = 1
-                #studentChoices_matrix.at[iStudent,iFaculty] = 1
-                #studentChoices_matrix.iloc[iStudent][iFaculty] = 1
                 studentChoices_matrix.loc[studentNames[iStudent],iFaculty] = 1
             else:
                 print("not scheduled")
@@ -126,14 +108,10 @@ def translateStudentRequests(directoryName):
 
     # FACULTY ENTICER GENERATOR
     print("Let's bug these faculty:")
-    #print(missingFacultyList)
-    #missingFacultyListSorted = sorted(missingFacultyList, key=lambda x: x.split(" ")[-1])
-    #print(*missingFacultyListSorted, sep="\n")
     missingFacultyList_FirstName = [faculty.split(" ")[0] for faculty in missingFacultyList]
     df_missing_faculty = pd.DataFrame(list(zip(missingFacultyList, missingFacultyList_FirstName, missingFacultyCounts)), columns=['Faculty name', 'First name', 'Number of requests'])
     df_missing_faculty = df_missing_faculty.sort_values(by=['Number of requests'], ascending=False)
 
-    #print("\n".join("{} {}".format(x, y) for x, y in zip(missingFacultyList, missingFacultyCounts)))
     print(df_missing_faculty)
 
     df_missing_faculty.to_excel(directoryName + '/fromBot_MIAFaculty.xlsx')
