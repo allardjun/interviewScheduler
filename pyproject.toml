@@ -11,8 +11,7 @@ dependencies = [
     "matplotlib>=3.9",
     "openpyxl>=3.1",
     "xlsxwriter>=3.1",
-    "fuzzywuzzy>=0.18",
-    "python-Levenshtein>=0.23",
+    "rapidfuzz>=3.6",
 ]
 
 [dependency-groups]

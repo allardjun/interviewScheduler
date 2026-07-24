@@ -9,8 +9,6 @@ def translateFacultyAvailability(directoryName):
 
     import pandas as pd
     import numpy as np
-    from fuzzywuzzy import fuzz #this is used in fuzzy line comparison to fix typos in names
-    from fuzzywuzzy import process
 
     # Read in student requests in comma-separated list form
     x1 = pd.read_excel(directoryName + '/forBot_FacultyAvailabilitySurvey.xlsx', engine='openpyxl')
