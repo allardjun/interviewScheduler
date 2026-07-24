@@ -49,7 +49,7 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
     if seed is not None:
         mySeed = int(seed)
         subdirectoryName = '/' + str(seed)
-        os.system("mkdir " + directoryName + subdirectoryName)
+        os.makedirs(directoryName + subdirectoryName, exist_ok=True)
     else:
         mySeed = int(time.time())#np.random.randint(40)
         subdirectoryName = ''
