@@ -93,7 +93,12 @@ def translateFacultyAvailability(directoryName):
 
 
 if __name__ == '__main__':
-    # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '/Volumes/Carrot/Dropbox/science/service/MCSB/Admissions/2024Entry/03RecruitmentVisit/2024RealData' # EDIT FOLDERNAME HERE
-    #FOLDERNAME = 'SampleData_RealAnon'
-    translateFacultyAvailability(FOLDERNAME)
+    import argparse
+    parser = argparse.ArgumentParser(
+        description='Translate the faculty availability survey into an '
+                    'availability matrix. Reads/writes forBot_*.xlsx in the '
+                    'given data folder.')
+    parser.add_argument('folder',
+                        help='folder containing the forBot_*.xlsx input files')
+    args = parser.parse_args()
+    translateFacultyAvailability(args.folder)

@@ -1,4 +1,4 @@
-def makeSchedule(directoryName, ntmax=int(5e5)):
+def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
 
     # Outline of this function
     # ---------------- DEPENDENCIES -----------------------------------------
@@ -46,10 +46,11 @@ def makeSchedule(directoryName, ntmax=int(5e5)):
 
     # ---------------- OPTIONS AND PARAMETERS -------------------------------
 
-    # uncomment for repeatable runs
-    if len(sys.argv)>1:
-        mySeed = int(sys.argv[1])
-        subdirectoryName = '/' + sys.argv[1]
+    # A fixed seed gives repeatable runs, and its output is written to a
+    # per-seed subdirectory. With no seed, use the clock and write in place.
+    if seed is not None:
+        mySeed = int(seed)
+        subdirectoryName = '/' + str(seed)
         os.system("mkdir " + directoryName + subdirectoryName)
     else:
         mySeed = int(time.time())#np.random.randint(40)
@@ -604,7 +605,15 @@ class Targets:
 
 
 if __name__ == '__main__':
-    # write the folder containing input data. Output data will be written to same folder.
-    FOLDERNAME = '/Volumes/Carrot/Dropbox/science/service/MCSB/Admissions/2024Entry/03RecruitmentVisit/2024RealData'  # EDIT FOLDERNAME HERE
-    #FOLDERNAME = 'SampleData_RealAnon'
-    makeSchedule(FOLDERNAME)
+    import argparse
+    parser = argparse.ArgumentParser(
+        description='Generate interview schedules from the forBot_*.xlsx input '
+                    'files in the given data folder. Output is written to the '
+                    'same folder (or a per-seed subfolder when --seed is given).')
+    parser.add_argument('folder',
+                        help='folder containing the forBot_*.xlsx input files')
+    parser.add_argument('--seed', type=int, default=None,
+                        help='RNG seed for a repeatable run; output goes to '
+                             'FOLDER/SEED/')
+    args = parser.parse_args()
+    makeSchedule(args.folder, seed=args.seed)

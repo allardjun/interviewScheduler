@@ -40,22 +40,42 @@ Requires two xlsx spreadsheets located in a folder (anywhere on machine)
 
 ### To run
 
-To run,
-1. Edit the FOLDERNAME near bottom of translateStudentRequests.py.
-2. Run ```python translateStudentRequests.py```.  This should create `forBot_StudentRequestMatrix.xlsx`. It will also write to the terminal a list of faculty names who were requested but are not in the availability schedule.
-3. Run ```python translateFacultyAvailability.py```. This will create `forBot_FacultyAvailabilityMatrix.xlsx`
-3. Run ``python makeSchedule.py``
+Each script takes the data folder as a command-line argument (call it
+`FOLDER`); all input and output files live in that folder. Run the three
+stages in order:
 
-4. This will create 4 xlsx spreadsheets:
+1. Build the faculty availability matrix:
+   ```
+   uv run python translateFacultyAvailability.py FOLDER
+   ```
+   This creates `forBot_FacultyAvailabilityMatrix.xlsx`.
+2. Build the student request matrix (needs the availability matrix from step 1):
+   ```
+   uv run python translateStudentRequests.py FOLDER
+   ```
+   This creates `forBot_StudentRequestsMatrix.xlsx`, and prints a list of
+   faculty who were requested but are not in the availability schedule.
+3. Generate the schedules:
+   ```
+   uv run python makeSchedule.py FOLDER
+   ```
+   Add `--seed N` for a repeatable run; its output is written to `FOLDER/N/`.
+
+Step 3 creates 4 xlsx spreadsheets in `FOLDER`:
  - `fromBot_FacultySchedules.xlsx`
  - `fromBot_FacultySchedules_1SheetEach.xlsx`
  - `fromBot_StudentSchedules.xlsx`
- - `fromBot_StudentSChedules_1SheetEach.xlsx`
+ - `fromBot_StudentSchedules_1SheetEach.xlsx`
+
+> **Note:** the committed `SampleData_RealAnon/` is a snapshot that predates the
+> current input schema and no longer runs. A small, self-consistent sample that
+> works with the current code lives in `tests/fixtures/sample_v2/` (see
+> `tests/make_fixture.py`), and is exercised by `uv run pytest`.
 
 
 ## Options
 
-* The variable ``ntmax`` determines how long the optimization search will last. On our real data with ~25 students, ~40 faculty and ~8 slots,``ntmax = 2e5`` takes about 3 minutes on a laptop and gives fairly robust optima.
+* The ``ntmax`` parameter of ``makeSchedule`` (default ``5e5``) determines how long the optimization search will last. On our real data with ~25 students, ~40 faculty and ~8 slots, ``ntmax = 2e5`` takes about 3 minutes on a laptop and gives fairly robust optima.
 * The ``alpha`` numbers following ``# relative importances of the targets`` allows you to request different prioritization of optima. For example, making the ``alpha`` associated with asterisk students makes their requests much more important than other students.
 
 
