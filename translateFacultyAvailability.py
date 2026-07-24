@@ -14,9 +14,7 @@ def translateFacultyAvailability(directoryName):
     x1 = pd.read_excel(directoryName + '/forBot_FacultyAvailabilitySurvey.xlsx', engine='openpyxl')
 
 
-    #print(x1)
     facultyList_df = x1[['Name','W','Max number of students', 'Campus Zone']]
-    #facultyList = facultyList_df['First Name'] + ' ' + facultyList_df['Last Name']
     facultyList = facultyList_df['Name'].copy()
     print(facultyList_df)
     for iFaculty in range(len(facultyList)):
@@ -44,22 +42,15 @@ def translateFacultyAvailability(directoryName):
     slots_with_transit = tmp
     slots_with_transit.pop()
 
-    #print(slots)
 
     # Make availability matrix, one column (faculty) at a time
     availabilityMatrix = np.zeros((len(slots), len(facultyList)))
     for iFaculty in range(len(x1)):
-        #print(stringOfAvailableSlots[iFaculty])
         for iSlot in range(len(slots)):
             availability_test = stringOfAvailableSlots[iFaculty].find(slots[iSlot]) + stringOfAvailableSlots[iFaculty].find(slots_with_transit[iSlot]) > -2
-            #print(slots[iSlot] + ' aka ' + slots_with_transit[iSlot] + ' Bool:' + str(availability_test)) 
             if availability_test:
                 availabilityMatrix[iSlot,iFaculty] = 1
-        # print(facultyList[iFaculty])
-        # print(availabilityMatrix[:,iFaculty])
-        # print(stringOfAvailableBigSlots[iFaculty])
 
-    #print(availabilityMatrix)
 
     # make dataframe for export
     # put in alphabetical by last name
@@ -79,12 +70,6 @@ def translateFacultyAvailability(directoryName):
     print(facultyList)
 
 
-    # facultyLastNames = []
-    # for iFaculty in range(len(facultyList)):
-    #     facultyLastNames.append(facultyList[iFaculty].split(' ')[-1])
-    # facultyList_df['Last name'] = facultyLastNames
-    # facultyList_df.sort_values(by=['Last name'], inplace=True)
-    # print(facultyList_df)
 
     # write to excel file
     availabilityMatrixDataFrame.fillna(0).to_excel(directoryName + '/forBot_FacultyAvailabilityMatrix.xlsx', engine='openpyxl')
