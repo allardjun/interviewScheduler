@@ -40,8 +40,6 @@ def makeSchedule(directoryName, ntmax=int(5e5), seed=None):
     import numpy as np
     import pandas as pd
     import matplotlib.pyplot as plt
-    from fuzzywuzzy import fuzz
-    from fuzzywuzzy import process
     import time
 
     # ---------------- OPTIONS AND PARAMETERS -------------------------------

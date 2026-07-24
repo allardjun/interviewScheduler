@@ -8,8 +8,7 @@ def translateStudentRequests(directoryName):
 
     import pandas as pd
 
-    from fuzzywuzzy import fuzz #this is used in fuzzy line comparison to fix typos in names
-    from fuzzywuzzy import process
+    from rapidfuzz import fuzz, process  # fuzzy comparison to fix typos in names
 
     # Read in student requests in comma-separated list form
     x1 = pd.read_excel(directoryName + '/forBot_StudentRequestList.xlsx')
