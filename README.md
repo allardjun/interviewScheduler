@@ -19,7 +19,7 @@ This creates a virtual environment (`.venv/`) with all dependencies pinned in
 
 ### Input data
 
-Requires two xlsx spreadsheets located in a folder (anywhere on machine)
+Requires three xlsx spreadsheets located in a folder (anywhere on machine)
 
 1. __FOLDERNAME/forBot_StudentRequestList.xlsx__ contains:
  - student names,
@@ -28,7 +28,7 @@ Requires two xlsx spreadsheets located in a folder (anywhere on machine)
  - student property "W" for optional additional property
  - names of requested faculty, separated by commas. These will be fuzzy-compared, so minor typos and missing first names are usually ok. "Faculty requested" means requested by student. "Faculty suggested" means requested by MCSB. In the algorithm they will be combined and treated equally.
 
-2. __FOLDERNAME/forBot_FacultyAvailabilitySurvey.xls__ contains:
+2. __FOLDERNAME/forBot_FacultyAvailabilitySurvey.xlsx__ contains:
  - Faculty names
  - Time slots they're available. The format is clunky, but it's what came out of the survey web tool.
  - Optional faculty property slot "W"
